@@ -349,6 +349,195 @@ body {
 }
 
 /* ============================================================
+   Golf Scoreboard — Classic Leaderboard Treatment
+   ============================================================ */
+
+.sb-wrapper {
+  margin-bottom: 2rem;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 3px solid var(--navy-800);
+  box-shadow:
+    0 4px 20px rgba(7, 15, 27, 0.15),
+    inset 0 0 0 1px rgba(200, 173, 130, 0.1);
+}
+
+.sb-header {
+  background: var(--navy-800);
+  text-align: center;
+  padding: 14px 0 10px;
+  border-bottom: 3px solid var(--gold-500);
+  position: relative;
+}
+
+.sb-header::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(200, 173, 130, 0.3);
+}
+
+.sb-header-text {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--gold-300);
+  text-transform: uppercase;
+}
+
+.sb-board {
+  background: var(--cream);
+}
+
+.sb-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.sb-table thead th {
+  background: var(--navy-800);
+  color: var(--gold-300);
+  font-family: var(--font-sans);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 4px;
+  text-align: center;
+  border-right: 1px solid rgba(200, 173, 130, 0.15);
+  white-space: nowrap;
+  position: relative;
+}
+
+.sb-table thead th:last-child {
+  border-right: none;
+}
+
+.sb-col-rank { width: 36px; }
+.sb-col-player { width: 140px; text-align: left !important; padding-left: 12px !important; }
+.sb-col-total { width: 56px; }
+.sb-col-tourney { width: 48px; }
+
+.sb-col-upcoming {
+  opacity: 0.3;
+}
+
+.sb-major-dot {
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  background: var(--gold-400);
+  border-radius: 50%;
+  margin-left: 2px;
+  vertical-align: super;
+}
+
+/* Rows */
+.sb-row {
+  border-bottom: 1px solid rgba(7, 15, 27, 0.08);
+  transition: background 0.15s;
+}
+
+.sb-row:hover {
+  background: rgba(200, 173, 130, 0.08) !important;
+}
+
+.sb-row:last-child {
+  border-bottom: none;
+}
+
+.sb-tier-break {
+  border-top: 2px solid var(--navy-800) !important;
+}
+
+/* Alternating rows */
+.sb-row:nth-child(even) {
+  background: rgba(7, 15, 27, 0.02);
+}
+
+/* Cells */
+.sb-cell {
+  padding: 7px 4px;
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  font-size: 0.78rem;
+  text-align: center;
+  color: var(--navy-800);
+  border-right: 1px solid rgba(7, 15, 27, 0.06);
+}
+
+.sb-cell:last-child {
+  border-right: none;
+}
+
+/* Rank column */
+.sb-col-rank.sb-cell {
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: var(--navy-800);
+}
+
+.sb-tier-top .sb-col-rank.sb-cell {
+  color: var(--gold-600);
+}
+
+/* Player name */
+.sb-player-name {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  color: var(--navy-800);
+  text-decoration: none;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s;
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+.sb-player-name:hover {
+  color: var(--gold-500);
+}
+
+.sb-col-player.sb-cell {
+  text-align: left;
+  padding-left: 12px;
+}
+
+/* Total column */
+.sb-total {
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: var(--navy-800);
+  background: rgba(200, 173, 130, 0.08);
+  border-right: 2px solid rgba(7, 15, 27, 0.1) !important;
+}
+
+/* Score cells */
+.sb-score {
+  font-weight: 600;
+  color: var(--navy-700);
+}
+
+.sb-live {
+  font-weight: 700;
+  color: #16a34a;
+}
+
+.sb-dns {
+  color: var(--gray-300);
+  font-weight: 400;
+  font-size: 0.7rem;
+}
+
+/* ============================================================
    Responsive
    ============================================================ */
 
@@ -357,5 +546,45 @@ body {
   .cb-table tbody td {
     padding: 8px 6px;
     font-size: 0.75rem;
+  }
+
+  .sb-header-text {
+    font-size: 1.2rem;
+    letter-spacing: 0.2em;
+  }
+
+  .sb-header {
+    padding: 10px 0 8px;
+  }
+
+  .sb-col-rank { width: 28px; }
+  .sb-col-player { width: 100px; }
+  .sb-col-total { width: 44px; }
+  .sb-col-tourney { width: 38px; }
+
+  .sb-table thead th {
+    font-size: 0.5rem;
+    padding: 6px 2px;
+  }
+
+  .sb-cell {
+    padding: 5px 2px;
+    font-size: 0.65rem;
+  }
+
+  .sb-player-name {
+    font-size: 0.6rem;
+  }
+
+  .sb-col-player.sb-cell {
+    padding-left: 6px;
+  }
+
+  .sb-total {
+    font-size: 0.7rem;
+  }
+
+  .sb-col-rank.sb-cell {
+    font-size: 0.7rem;
   }
 }

@@ -5,6 +5,7 @@ import { PlayerSeason, TournamentData } from '@/lib/types';
 import { calculateAdjustedPoints } from '@/lib/utils';
 import { useTournaments } from '@/lib/TournamentContext';
 import PayoutModal from './PayoutModal';
+import LeaderboardScoreboard from './LeaderboardScoreboard';
 
 interface SeasonStandingsProps {
   playerSeasons: PlayerSeason[];
@@ -57,7 +58,15 @@ export default function SeasonStandings({ playerSeasons, tournamentData, onPlaye
         </button>
       </div>
 
-      {/* Standings Table */}
+      {/* Golf Scoreboard Hero */}
+      <LeaderboardScoreboard
+        playerSeasons={playerSeasons}
+        tournamentData={tournamentData}
+        onPlayerClick={onPlayerClick}
+      />
+
+      {/* Full Standings Table */}
+      <h3 className="text-sm font-semibold mb-3 mt-2" style={{ color: 'var(--navy-700)' }}>Full Standings</h3>
       <div className="overflow-x-auto rounded-lg" style={{ border: '1px solid var(--gray-200)' }}>
         <table className="cb-table">
           <thead>
