@@ -31,14 +31,19 @@ export default function DashboardPage() {
 
       try {
         if (isSupabaseConfigured()) {
-          // Fetch live tournament metadata (status, round) from Supabase
-          const liveTournaments = await getLiveTournaments();
-          setTournaments(liveTournaments);
-
-          const allData = await getAllTournamentData();
-          for (const td of allData) {
-            data[td.tournament.id] = td;
-          }
+          // Race against a timeout to prevent infinite loading
+          const supabaseLoad = async () => {
+            const liveTournaments = await getLiveTournaments();
+            setTournaments(liveTournaments);
+            const allData = await getAllTournamentData();
+            for (const td of allData) {
+              data[td.tournament.id] = td;
+            }
+          };
+          const timeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Supabase timeout')), 8000)
+          );
+          await Promise.race([supabaseLoad(), timeout]);
         }
       } catch (err) {
         console.error('Failed to load from Supabase, using seed data:', err);
@@ -53,7 +58,11 @@ export default function DashboardPage() {
       setPlayerSeasons(buildPlayerSeasons(Object.values(data)));
       setLoading(false);
     }
-    loadData();
+    loadData().catch(() => {
+      setTournamentData(getSeedData());
+      setPlayerSeasons(buildPlayerSeasons(Object.values(getSeedData())));
+      setLoading(false);
+    });
   }, []);
 
   const handlePlayerClick = (handle: string) => {
