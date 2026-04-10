@@ -1,0 +1,21 @@
+{
+  "name": "COREYBALL Golf 2026",
+  "short_name": "Coreyball",
+  "description": "DraftKings Season-Long DFS Golf League",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#070F1B",
+  "theme_color": "#070F1B",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
