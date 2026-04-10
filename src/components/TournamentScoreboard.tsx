@@ -117,24 +117,23 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
               {new Date(currentTournament.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} &ndash; {new Date(currentTournament.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
             </p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 flex-wrap">
             {currentTournament.isMajor && (
-              <span className="badge badge-major">Major &middot; 1.25x</span>
+              <span className="status-pill badge-major">Major 1.25x</span>
             )}
             {currentData ? (
-              <span className={`badge ${isCompleted ? 'badge-payout' : 'badge-in-progress'}`}>
+              <span className={`status-pill ${isCompleted ? 'badge-payout' : 'badge-in-progress'}`}>
                 {getRoundLabel(currentTournament.currentRound)}
               </span>
             ) : (
-              <span className="badge" style={{ background: 'var(--gray-100)', color: 'var(--gray-500)', border: '1px solid var(--gray-200)' }}>
+              <span className="status-pill" style={{ background: 'var(--gray-100)', color: 'var(--gray-500)', border: '1px solid var(--gray-200)' }}>
                 Upcoming
               </span>
             )}
-            {/* Cut Summary icon — show when data exists */}
             {currentData && (
               <button
                 onClick={() => setShowCutSummary(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105 cursor-pointer"
+                className="status-pill cursor-pointer hover:scale-105 transition-all"
                 style={{
                   background: 'rgba(59, 130, 246, 0.08)',
                   color: '#2563eb',
@@ -145,10 +144,9 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                 {'\u2702\uFE0F'} Cut
               </button>
             )}
-            {/* Payouts icon */}
             <button
               onClick={() => setShowPayouts(true)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105 cursor-pointer"
+              className="status-pill cursor-pointer hover:scale-105 transition-all"
               style={{
                 background: 'rgba(168, 144, 88, 0.1)',
                 color: 'var(--gold-600)',

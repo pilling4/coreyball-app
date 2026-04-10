@@ -224,6 +224,21 @@ body {
   border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
+/* Uniform status pills for tournament header */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 90px;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+}
+
 /* ============================================================
    Card Styles
    ============================================================ */
