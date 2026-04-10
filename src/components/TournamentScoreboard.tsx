@@ -39,6 +39,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
   const [golfClap, setGolfClap] = useState<{ player: string; tournament: string } | null>(null);
   const [showPayouts, setShowPayouts] = useState(false);
   const [showCutSummary, setShowCutSummary] = useState(false);
+  const [showInsights, setShowInsights] = useState(false);
   const [showRankInfo, setShowRankInfo] = useState(false);
 
   // Build a lookup from entryName -> seasonRank
@@ -156,6 +157,36 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
             >
               {'\u{1F4B0}'} Payouts
             </button>
+            {currentData && (
+              <button
+                onClick={() => setShowInsights(true)}
+                className="status-pill cursor-pointer hover:scale-105 transition-all"
+                style={{
+                  background: 'rgba(139, 92, 246, 0.08)',
+                  color: '#7c3aed',
+                  border: '1px solid rgba(139, 92, 246, 0.2)',
+                }}
+                title="Tournament insights"
+              >
+                {'\u{1F4CA}'} Insights
+              </button>
+            )}
+            {currentData && (
+              <button
+                onClick={() => {
+                  document.getElementById('ownership-section')?.scrollIntoView({ behavior: 'smooth' });
+                }}
+                className="status-pill cursor-pointer hover:scale-105 transition-all"
+                style={{
+                  background: 'rgba(16, 185, 129, 0.08)',
+                  color: '#059669',
+                  border: '1px solid rgba(16, 185, 129, 0.2)',
+                }}
+                title="View golfer ownership"
+              >
+                {'\u{1F4CB}'} Ownership
+              </button>
+            )}
           </div>
         </div>
         {currentData && currentTournament.updatedAt && (
@@ -347,6 +378,122 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
           tournamentName={currentTournament.name}
         />
       )}
+
+      {/* Insights Modal */}
+      {showInsights && currentData && (() => {
+        const entries = currentData.entries;
+        const ownership = currentData.ownership;
+        const totalEntries = entries.length;
+        const avgPts = entries.reduce((s, e) => s + e.points, 0) / totalEntries;
+        const maxPts = entries[0]?.points || 0;
+        const minPts = entries[entries.length - 1]?.points || 0;
+        const medianPts = entries[Math.floor(totalEntries / 2)]?.points || 0;
+
+        // Top 5 scoring golfers
+        const topGolfers = [...ownership].sort((a, b) => b.fpts - a.fpts).slice(0, 5);
+
+        // Most/least owned
+        const mostOwned = [...ownership].sort((a, b) => b.pctDrafted - a.pctDrafted).slice(0, 3);
+        const leastOwned = [...ownership].filter(o => o.pctDrafted > 0).sort((a, b) => a.pctDrafted - b.pctDrafted).slice(0, 3);
+
+        // Best value: highest fpts with low ownership
+        const bestValue = [...ownership]
+          .filter(o => o.pctDrafted > 0 && o.pctDrafted <= 15)
+          .sort((a, b) => b.fpts - a.fpts)
+          .slice(0, 3);
+
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(7, 15, 27, 0.6)', backdropFilter: 'blur(4px)' }}>
+            <div className="relative w-full max-w-lg rounded-xl overflow-hidden animate-scaleIn" style={{ background: 'white', maxHeight: '85vh', overflowY: 'auto' }}>
+              {/* Header */}
+              <div className="sticky top-0 z-10 px-6 py-4" style={{ background: 'var(--navy-800)', borderBottom: '2px solid var(--gold-500)' }}>
+                <h3 className="text-lg font-bold" style={{ fontFamily: 'Georgia, serif', color: 'var(--gold-300)' }}>
+                  {currentTournament.name} Insights
+                </h3>
+                <p className="text-xs mt-0.5" style={{ color: 'var(--gold-500)' }}>
+                  {getRoundLabel(currentTournament.currentRound)} &middot; {totalEntries} entries
+                </p>
+                <button
+                  onClick={() => setShowInsights(false)}
+                  className="absolute top-4 right-4 text-gold-300 hover:text-white cursor-pointer"
+                  style={{ color: 'var(--gold-300)' }}
+                >
+                  {'\u2715'}
+                </button>
+              </div>
+
+              <div className="p-6 space-y-5">
+                {/* Scoring Summary */}
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--navy-700)' }}>Scoring Summary</h4>
+                  <div className="grid grid-cols-4 gap-3">
+                    {[
+                      { label: 'High', value: maxPts.toFixed(1) },
+                      { label: 'Average', value: avgPts.toFixed(1) },
+                      { label: 'Median', value: medianPts.toFixed(1) },
+                      { label: 'Low', value: minPts.toFixed(1) },
+                    ].map(stat => (
+                      <div key={stat.label} className="text-center p-2.5 rounded-lg" style={{ background: 'var(--gray-50)', border: '1px solid var(--gray-200)' }}>
+                        <p className="cb-data text-lg font-bold" style={{ color: 'var(--navy-800)' }}>{stat.value}</p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--gray-500)' }}>{stat.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Top Scoring Golfers */}
+                <div>
+                  <h4 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--navy-700)' }}>Top Scoring Golfers</h4>
+                  <div className="space-y-2">
+                    {topGolfers.map((g, i) => (
+                      <div key={g.golferName} className="flex items-center justify-between py-1.5 px-3 rounded-lg" style={{ background: i === 0 ? 'rgba(168, 144, 88, 0.08)' : 'transparent' }}>
+                        <div className="flex items-center gap-2">
+                          <span className="cb-data text-xs font-bold" style={{ color: i < 3 ? 'var(--gold-600)' : 'var(--gray-400)', width: '16px' }}>{i + 1}</span>
+                          <span className="text-sm font-medium" style={{ color: 'var(--navy-800)' }}>{g.golferName}</span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs" style={{ color: 'var(--gray-500)' }}>{g.pctDrafted.toFixed(0)}% owned</span>
+                          <span className="cb-data text-sm font-bold" style={{ color: 'var(--navy-800)' }}>{g.fpts.toFixed(1)}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Ownership Insights */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--navy-700)' }}>Most Owned</h4>
+                    {mostOwned.map(g => (
+                      <div key={g.golferName} className="flex justify-between py-1">
+                        <span className="text-xs truncate mr-2" style={{ color: 'var(--gray-700)' }}>{g.golferName}</span>
+                        <span className="cb-data text-xs font-semibold" style={{ color: 'var(--gold-600)' }}>{g.pctDrafted.toFixed(0)}%</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--navy-700)' }}>Best Value</h4>
+                    {bestValue.map(g => (
+                      <div key={g.golferName} className="flex justify-between py-1">
+                        <span className="text-xs truncate mr-2" style={{ color: 'var(--gray-700)' }}>{g.golferName}</span>
+                        <span className="cb-data text-xs font-semibold" style={{ color: '#16a34a' }}>{g.fpts.toFixed(1)} pts</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Spread */}
+                <div className="pt-2" style={{ borderTop: '1px solid var(--gray-200)' }}>
+                  <div className="flex justify-between text-xs" style={{ color: 'var(--gray-500)' }}>
+                    <span>Point Spread (1st to last)</span>
+                    <span className="cb-data font-semibold" style={{ color: 'var(--navy-800)' }}>{(maxPts - minPts).toFixed(1)} pts</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

@@ -109,7 +109,7 @@ export default function DashboardPage() {
           {activeTab === 'tournaments' && (
             <div className="space-y-8">
               <TournamentScoreboard tournamentData={tournamentData} playerSeasons={playerSeasons} onPlayerClick={handlePlayerClick} />
-              <div className="cb-card">
+              <div id="ownership-section" className="cb-card">
                 <GolferOwnership tournamentData={tournamentData} />
               </div>
             </div>
