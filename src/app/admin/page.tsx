@@ -99,9 +99,11 @@ export default function AdminPage() {
 
     setStatus('uploading');
     const tournament = TOURNAMENTS.find(t => t.id === selectedTournament)!;
+    const sb = getSupabaseClient()!;
 
     try {
-      await getSupabaseClient()!.from('tournaments').upsert({
+      // Step 1: Upsert tournament metadata
+      const { error: tourneyErr } = await sb.from('tournaments').upsert({
         id: tournament.id,
         name: tournament.name,
         short_name: tournament.shortName,
@@ -114,10 +116,16 @@ export default function AdminPage() {
         current_round: currentRound,
         updated_at: new Date().toISOString(),
       });
+      if (tourneyErr) throw new Error(`Tournament upsert failed: ${tourneyErr.message}`);
 
-      await getSupabaseClient()!.from('entries').delete().eq('tournament_id', tournament.id);
-      await getSupabaseClient()!.from('golfer_ownership').delete().eq('tournament_id', tournament.id);
+      // Step 2: Delete old entries
+      const { error: delEntriesErr } = await sb.from('entries').delete().eq('tournament_id', tournament.id);
+      if (delEntriesErr) throw new Error(`Delete entries failed: ${delEntriesErr.message}`);
 
+      const { error: delOwnerErr } = await sb.from('golfer_ownership').delete().eq('tournament_id', tournament.id);
+      if (delOwnerErr) throw new Error(`Delete ownership failed: ${delOwnerErr.message}`);
+
+      // Step 3: Insert new entries (batch in chunks of 20 to avoid payload limits)
       const entryRows = previewData.entries.map(e => ({
         tournament_id: tournament.id,
         entry_id: e.entryId,
@@ -128,8 +136,14 @@ export default function AdminPage() {
         lineup: e.lineup,
         payout: e.payout,
       }));
-      await getSupabaseClient()!.from('entries').insert(entryRows);
 
+      for (let i = 0; i < entryRows.length; i += 20) {
+        const batch = entryRows.slice(i, i + 20);
+        const { error: insertErr } = await sb.from('entries').insert(batch);
+        if (insertErr) throw new Error(`Insert entries batch ${i / 20 + 1} failed: ${insertErr.message}`);
+      }
+
+      // Step 4: Insert ownership data
       const ownershipRows = previewData.ownership.map(o => ({
         tournament_id: tournament.id,
         golfer_name: o.golferName,
@@ -137,13 +151,18 @@ export default function AdminPage() {
         pct_drafted: o.pctDrafted,
         fpts: o.fpts,
       }));
-      await getSupabaseClient()!.from('golfer_ownership').insert(ownershipRows);
+
+      for (let i = 0; i < ownershipRows.length; i += 20) {
+        const batch = ownershipRows.slice(i, i + 20);
+        const { error: insertErr } = await sb.from('golfer_ownership').insert(batch);
+        if (insertErr) throw new Error(`Insert ownership batch ${i / 20 + 1} failed: ${insertErr.message}`);
+      }
 
       setStatus('success');
-      setMessage(`Successfully uploaded ${previewData.entries.length} entries for ${tournament.name} (Round ${currentRound})`);
+      setMessage(`Successfully uploaded ${previewData.entries.length} entries and ${previewData.ownership.length} golfers for ${tournament.name} (Round ${currentRound})`);
     } catch (err) {
       setStatus('error');
-      setMessage(`Upload error: ${err}`);
+      setMessage(`Upload error: ${err instanceof Error ? err.message : err}`);
     }
   };
 
