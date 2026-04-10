@@ -1,6 +1,6 @@
 import { TournamentData, Entry, GolferOwnership } from './types';
 import { TOURNAMENTS } from './constants';
-import { supabase, isSupabaseConfigured } from './supabase';
+import { getSupabaseClient, isSupabaseConfigured } from './supabase';
 import { calculateEventPayouts } from './utils';
 
 // ============================================================
@@ -133,19 +133,19 @@ const SEED_DATA: Record<string, TournamentData> = {
 export async function getTournamentData(tournamentId: string): Promise<TournamentData | null> {
   if (isSupabaseConfigured()) {
     try {
-      const { data: tournament } = await supabase!
+      const { data: tournament } = await getSupabaseClient()!
         .from('tournaments')
         .select('*')
         .eq('id', tournamentId)
         .single();
 
-      const { data: entries } = await supabase!
+      const { data: entries } = await getSupabaseClient()!
         .from('entries')
         .select('*')
         .eq('tournament_id', tournamentId)
         .order('rank', { ascending: true });
 
-      const { data: ownership } = await supabase!
+      const { data: ownership } = await getSupabaseClient()!
         .from('golfer_ownership')
         .select('*')
         .eq('tournament_id', tournamentId)
@@ -196,7 +196,7 @@ export async function getAllTournamentData(): Promise<TournamentData[]> {
   if (isSupabaseConfigured()) {
     try {
       // Find which tournaments actually have entries uploaded
-      const { data: tournamentIds } = await supabase!
+      const { data: tournamentIds } = await getSupabaseClient()!
         .from('entries')
         .select('tournament_id')
         .limit(1000);
@@ -228,7 +228,7 @@ export async function getLiveTournaments(): Promise<import('./types').Tournament
   if (!isSupabaseConfigured()) return TOURNAMENTS;
 
   try {
-    const { data } = await supabase!
+    const { data } = await getSupabaseClient()!
       .from('tournaments')
       .select('*')
       .order('start_date', { ascending: true });

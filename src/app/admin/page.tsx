@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { TOURNAMENTS } from '@/lib/constants';
 import { parseCSVData, calculateEventPayouts } from '@/lib/utils';
-import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { getSupabaseClient, isSupabaseConfigured } from '@/lib/supabase';
 
 const ADMIN_PASSWORD = 'coreyball2026';
 
@@ -101,7 +101,7 @@ export default function AdminPage() {
     const tournament = TOURNAMENTS.find(t => t.id === selectedTournament)!;
 
     try {
-      await supabase!.from('tournaments').upsert({
+      await getSupabaseClient()!.from('tournaments').upsert({
         id: tournament.id,
         name: tournament.name,
         short_name: tournament.shortName,
@@ -115,8 +115,8 @@ export default function AdminPage() {
         updated_at: new Date().toISOString(),
       });
 
-      await supabase!.from('entries').delete().eq('tournament_id', tournament.id);
-      await supabase!.from('golfer_ownership').delete().eq('tournament_id', tournament.id);
+      await getSupabaseClient()!.from('entries').delete().eq('tournament_id', tournament.id);
+      await getSupabaseClient()!.from('golfer_ownership').delete().eq('tournament_id', tournament.id);
 
       const entryRows = previewData.entries.map(e => ({
         tournament_id: tournament.id,
@@ -128,7 +128,7 @@ export default function AdminPage() {
         lineup: e.lineup,
         payout: e.payout,
       }));
-      await supabase!.from('entries').insert(entryRows);
+      await getSupabaseClient()!.from('entries').insert(entryRows);
 
       const ownershipRows = previewData.ownership.map(o => ({
         tournament_id: tournament.id,
@@ -137,7 +137,7 @@ export default function AdminPage() {
         pct_drafted: o.pctDrafted,
         fpts: o.fpts,
       }));
-      await supabase!.from('golfer_ownership').insert(ownershipRows);
+      await getSupabaseClient()!.from('golfer_ownership').insert(ownershipRows);
 
       setStatus('success');
       setMessage(`Successfully uploaded ${previewData.entries.length} entries for ${tournament.name} (Round ${currentRound})`);
