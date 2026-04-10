@@ -515,6 +515,11 @@ body {
   background: none;
   border: none;
   padding: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  width: 100%;
 }
 
 .sb-player-name:hover {
@@ -524,6 +529,10 @@ body {
 .sb-col-player.sb-cell {
   text-align: left;
   padding-left: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0;
 }
 
 /* Total column */
