@@ -86,7 +86,7 @@ body {
 
 @keyframes expandRow {
   from { opacity: 0; max-height: 0; }
-  to { opacity: 1; max-height: 300px; }
+  to { opacity: 1; max-height: 800px; }
 }
 
 .animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
