@@ -602,4 +602,8 @@ body {
   .sb-col-rank.sb-cell {
     font-size: 0.7rem;
   }
+
+  .lineup-panel {
+    padding: 12px 8px;
+  }
 }
