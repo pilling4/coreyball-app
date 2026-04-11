@@ -65,8 +65,15 @@ function parseCompetitor(c: ESPNCompetitor, maxRounds: number): GolferLiveData {
     ?.filter((ls) => ls.displayValue !== '-')
     .pop();
 
-  // A golfer is cut if after Round 2+, they have fewer completed rounds than the leaders
-  const isCut = maxRounds >= 3 && completedRounds <= 2 && completedRounds < maxRounds;
+  // Multiple ways to detect a cut:
+  // 1. ESPN status field says "cut"
+  const statusAbbr = (c.status?.type?.abbreviation || '').toLowerCase();
+  const statusDisplay = (c.status?.displayValue || '').toLowerCase();
+  const espnSaysCut = statusAbbr === 'cut' || statusDisplay.includes('cut') || (c.score || '').toUpperCase() === 'CUT';
+  // 2. After Round 2, they have fewer completed rounds than the leaders
+  const roundBasedCut = maxRounds >= 3 && completedRounds <= 2 && completedRounds < maxRounds;
+
+  const isCut = espnSaysCut || roundBasedCut;
 
   return {
     espnId: c.id,

@@ -293,7 +293,9 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                                 const ownership = getOwnershipForGolfer(golfer, currentData.ownership);
                                 const pts = getPointsForGolfer(golfer, currentData.ownership);
                                 const live = espnData[golfer];
-                                const isCut = live?.isCut || live?.score === 'CUT';
+                                // Cut detection: ESPN says cut, OR golfer not found in ESPN after Round 2 (ESPN only returns active golfers)
+                                const espnHasData = Object.keys(espnData).length > 0;
+                                const isCut = live?.isCut || live?.score === 'CUT' || (espnHasData && !live && currentTournament.currentRound >= 2);
                                 const scoreColor = isCut ? '#dc2626' : live?.score?.startsWith('-') ? '#16a34a' : live?.score?.startsWith('+') ? '#dc2626' : 'var(--gray-600)';
                                 return (
                                   <div key={golfer} className={`golfer-card ${isCut ? 'golfer-card-cut' : ''}`}>
