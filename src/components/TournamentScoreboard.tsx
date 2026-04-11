@@ -138,27 +138,30 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
             {/* Divider */}
             {currentData && <span style={{ color: 'var(--gray-300)' }}>|</span>}
 
-            {/* Action pills — consistent gold treatment */}
+            {/* Action pills — 1. Insights 2. Ownership 3. Lineups 4. Payouts */}
             {currentData && (
-              <button onClick={() => setShowCutSummary(true)} className="action-pill" title="View cut summary">
-                {'\u2702\uFE0F'} Lineups
-              </button>
+              <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-2">
+                <button onClick={() => setShowInsights(true)} className="action-pill" title="Tournament insights">
+                  {'\u{1F4CA}'} Insights
+                </button>
+                <button
+                  onClick={() => document.getElementById('ownership-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="action-pill"
+                  title="View golfer ownership"
+                >
+                  {'\u{1F4CB}'} Ownership
+                </button>
+                <button onClick={() => setShowCutSummary(true)} className="action-pill" title="View lineups">
+                  {'\u2702\uFE0F'} Lineups
+                </button>
+                <button onClick={() => setShowPayouts(true)} className="action-pill" title="View payout structure">
+                  {'\u{1F4B0}'} Payouts
+                </button>
+              </div>
             )}
-            <button onClick={() => setShowPayouts(true)} className="action-pill" title="View payout structure">
-              {'\u{1F4B0}'} Payouts
-            </button>
-            {currentData && (
-              <button onClick={() => setShowInsights(true)} className="action-pill" title="Tournament insights">
-                {'\u{1F4CA}'} Insights
-              </button>
-            )}
-            {currentData && (
-              <button
-                onClick={() => document.getElementById('ownership-section')?.scrollIntoView({ behavior: 'smooth' })}
-                className="action-pill"
-                title="View golfer ownership"
-              >
-                {'\u{1F4CB}'} Ownership
+            {!currentData && (
+              <button onClick={() => setShowPayouts(true)} className="action-pill" title="View payout structure">
+                {'\u{1F4B0}'} Payouts
               </button>
             )}
           </div>
