@@ -49,6 +49,11 @@ export interface GolferLiveData {
   isCut: boolean;
 }
 
+/** Strip diacritics/accents: å→a, ü→u, ñ→n, etc. */
+function normalize(s: string): string {
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+}
+
 function getHeadshotUrl(espnId: string): string {
   if (!espnId || espnId === '0') return '';
   return `https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/${espnId}.png&w=96&h=70&cb=1`;
@@ -118,11 +123,13 @@ export async function GET(request: NextRequest) {
     // Determine max completed rounds across all competitors
     const maxRounds = Math.max(...competitors.map(c => getCompletedRounds(c)), 0);
 
-    // Build a lookup: golfer name -> live data
+    // Build lookups: exact name -> data AND normalized name -> data
     const allGolfers: Record<string, GolferLiveData> = {};
+    const normalizedLookup: Record<string, GolferLiveData> = {};
     for (const c of competitors) {
       const parsed = parseCompetitor(c, maxRounds);
       allGolfers[parsed.name] = parsed;
+      normalizedLookup[normalize(parsed.name)] = parsed;
     }
 
     // If specific golfers requested, filter to just those
@@ -134,16 +141,18 @@ export async function GET(request: NextRequest) {
         // Try exact match first
         if (allGolfers[name]) {
           result[name] = allGolfers[name];
+        } else if (normalizedLookup[normalize(name)]) {
+          // Normalized match (strips diacritics: Åberg → aberg)
+          result[name] = normalizedLookup[normalize(name)];
         } else {
-          // Fuzzy match: require exact last name match (not partial includes)
-          const nameParts = name.toLowerCase().split(' ');
+          // Fuzzy match: normalized last name + first 3 chars of first name
+          const nameParts = normalize(name).split(' ');
           const lastName = nameParts[nameParts.length - 1];
           const firstName = nameParts[0];
           const match = Object.entries(allGolfers).find(([n]) => {
-            const parts = n.toLowerCase().split(' ');
+            const parts = normalize(n).split(' ');
             const eLast = parts[parts.length - 1];
             const eFirst = parts[0];
-            // Last name must match exactly, and first name should start similarly
             return eLast === lastName && eFirst.startsWith(firstName.slice(0, 3));
           });
           if (match) {
