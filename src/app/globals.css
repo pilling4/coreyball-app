@@ -43,6 +43,11 @@
   --font-serif: Georgia, 'Times New Roman', serif;
 }
 
+html, body {
+  overflow-x: hidden;
+  width: 100%;
+}
+
 body {
   background: var(--white);
   color: var(--gray-800);

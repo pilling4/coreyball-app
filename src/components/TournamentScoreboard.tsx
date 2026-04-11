@@ -141,7 +141,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
             {/* Action pills — consistent gold treatment */}
             {currentData && (
               <button onClick={() => setShowCutSummary(true)} className="action-pill" title="View cut summary">
-                {'\u2702\uFE0F'} Cut
+                {'\u2702\uFE0F'} Lineups
               </button>
             )}
             <button onClick={() => setShowPayouts(true)} className="action-pill" title="View payout structure">
@@ -289,7 +289,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                         <td colSpan={6} style={{ textAlign: 'left' }}>
                           <div className="animate-expandRow overflow-hidden lineup-panel">
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
-                              {entry.lineup.map(golfer => {
+                              {[...entry.lineup].sort((a, b) => getPointsForGolfer(b, currentData.ownership) - getPointsForGolfer(a, currentData.ownership)).map(golfer => {
                                 const ownership = getOwnershipForGolfer(golfer, currentData.ownership);
                                 const pts = getPointsForGolfer(golfer, currentData.ownership);
                                 const live = espnData[golfer];
