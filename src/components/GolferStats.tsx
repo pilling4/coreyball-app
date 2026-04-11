@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react';
 import { TournamentData } from '@/lib/types';
 import { useTournaments } from '@/lib/TournamentContext';
-import { parseTimeRemaining } from '@/lib/utils';
+import { useESPNData } from '@/lib/useESPNData';
 import GolferHeadshot from './GolferHeadshot';
 
 interface GolferStatsProps {
@@ -34,6 +34,17 @@ export default function GolferStats({ tournamentData }: GolferStatsProps) {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [search, setSearch] = useState('');
 
+  // Collect all unique golfer names across all tournaments for ESPN lookup
+  const allGolferNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const td of Object.values(tournamentData)) {
+      for (const o of td.ownership) names.add(o.golferName);
+    }
+    return Array.from(names);
+  }, [tournamentData]);
+
+  const { golfers: espnData } = useESPNData(allGolferNames);
+
   const golfers = useMemo(() => {
     const golferMap = new Map<string, GolferAggregate>();
 
@@ -44,24 +55,14 @@ export default function GolferStats({ tournamentData }: GolferStatsProps) {
       const td = tournamentData[tournament.id];
       if (!td) continue;
 
-      const cutApplied = tournament.currentRound >= 2;
+      // Cut applies once Round 3+ has started
+      const cutApplied = tournament.currentRound >= 3 || tournament.status === 'completed';
 
       // Build a map of golfer -> how many entries drafted them
       const draftCount = new Map<string, number>();
-      // Build a map of golfer -> did they make the cut (based on any entry's timeRemaining)
-      const golferCutStatus = new Map<string, boolean>();
-
       for (const entry of td.entries) {
         for (const golferName of entry.lineup) {
           draftCount.set(golferName, (draftCount.get(golferName) || 0) + 1);
-
-          // Determine cut status from entry's timeRemaining
-          if (cutApplied && !golferCutStatus.has(golferName)) {
-            const { cutsMade } = parseTimeRemaining(entry.timeRemaining, tournament.currentRound);
-            // A golfer made the cut if they contribute holes to the timeRemaining
-            // We check via ownership fpts — if they have > 0 holes remaining in weekend
-            // Actually, we can check from the ownership data directly
-          }
         }
       }
 
@@ -83,26 +84,17 @@ export default function GolferStats({ tournamentData }: GolferStatsProps) {
         golfer.totalFpts += o.fpts;
         golfer.totalTimesDrafted += draftCount.get(o.golferName) || 0;
 
-        // Determine cut status:
-        // If cut has been applied (round >= 2), a golfer with 0 fpts after round 2+ likely missed cut
-        // But more accurately: we look at whether the golfer still has time remaining
-        // Since we don't have per-golfer time data, we use fpts as a proxy after R2:
-        // A golfer who missed cut would still have their R1/R2 fpts frozen
-        // For now, we mark cut status based on whether they appear to have weekend scores
-        // The most reliable method: if round >= 3 or 4 and fpts is from pre-cut only, they missed
-        // Simplification: if round >= 2 and golfer has any fpts, they're in; if 0 fpts, missed cut
-        // Better: we check if their time remaining contributes (but we don't have per-golfer data)
-
-        // Simple approach: if the cut has happened, check if golfer's total fpts is > 0
-        // In a real scenario after R2, a golfer who made the cut will have increasing fpts
-        // A golfer who missed will have their R1-R2 fpts frozen
-        // Since we can't distinguish perfectly without per-golfer round data, we'll mark
-        // all golfers as having made the cut if they have fpts > 0 after R2
+        // Use ESPN isCut data when cut has been applied
         let madeCut: boolean | null = null;
         if (cutApplied) {
-          // After cut, if fpts > 0, golfer was active (made cut or at least played)
-          // This is a simplification — in practice the admin data would clarify
-          madeCut = o.fpts > 0;
+          const espnGolfer = espnData[o.golferName];
+          if (espnGolfer) {
+            // ESPN explicitly marks golfers as CUT
+            madeCut = !espnGolfer.isCut;
+          } else {
+            // Fallback: no ESPN match — use fpts > 0 as rough proxy
+            madeCut = o.fpts > 0;
+          }
         }
 
         golfer.tournaments.push({
@@ -129,7 +121,7 @@ export default function GolferStats({ tournamentData }: GolferStatsProps) {
     }
 
     return Array.from(golferMap.values());
-  }, [tournamentData]);
+  }, [tournamentData, espnData]);
 
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
