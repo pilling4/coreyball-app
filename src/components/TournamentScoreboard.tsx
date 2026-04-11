@@ -119,69 +119,43 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
+            {/* Status labels (not clickable) */}
             {currentTournament.isMajor && (
-              <span className="status-pill badge-major">Major 1.25x</span>
+              <span className="text-xs font-semibold" style={{ color: 'var(--gold-600)' }}>
+                Major &middot; 1.25x
+              </span>
             )}
             {currentData ? (
-              <span className={`status-pill ${isCompleted ? 'badge-payout' : 'badge-in-progress'}`}>
+              <span className="text-xs font-semibold" style={{ color: isCompleted ? '#16a34a' : '#2563eb' }}>
                 {getRoundLabel(currentTournament.currentRound)}
               </span>
             ) : (
-              <span className="status-pill" style={{ background: 'var(--gray-100)', color: 'var(--gray-500)', border: '1px solid var(--gray-200)' }}>
+              <span className="text-xs font-semibold" style={{ color: 'var(--gray-400)' }}>
                 Upcoming
               </span>
             )}
+
+            {/* Divider */}
+            {currentData && <span style={{ color: 'var(--gray-300)' }}>|</span>}
+
+            {/* Action pills — consistent gold treatment */}
             {currentData && (
-              <button
-                onClick={() => setShowCutSummary(true)}
-                className="status-pill cursor-pointer hover:scale-105 transition-all"
-                style={{
-                  background: 'rgba(59, 130, 246, 0.08)',
-                  color: '#2563eb',
-                  border: '1px solid rgba(59, 130, 246, 0.2)',
-                }}
-                title="View cut summary"
-              >
+              <button onClick={() => setShowCutSummary(true)} className="action-pill" title="View cut summary">
                 {'\u2702\uFE0F'} Cut
               </button>
             )}
-            <button
-              onClick={() => setShowPayouts(true)}
-              className="status-pill cursor-pointer hover:scale-105 transition-all"
-              style={{
-                background: 'rgba(168, 144, 88, 0.1)',
-                color: 'var(--gold-600)',
-                border: '1px solid rgba(168, 144, 88, 0.25)',
-              }}
-              title="View payout structure"
-            >
+            <button onClick={() => setShowPayouts(true)} className="action-pill" title="View payout structure">
               {'\u{1F4B0}'} Payouts
             </button>
             {currentData && (
-              <button
-                onClick={() => setShowInsights(true)}
-                className="status-pill cursor-pointer hover:scale-105 transition-all"
-                style={{
-                  background: 'rgba(139, 92, 246, 0.08)',
-                  color: '#7c3aed',
-                  border: '1px solid rgba(139, 92, 246, 0.2)',
-                }}
-                title="Tournament insights"
-              >
+              <button onClick={() => setShowInsights(true)} className="action-pill" title="Tournament insights">
                 {'\u{1F4CA}'} Insights
               </button>
             )}
             {currentData && (
               <button
-                onClick={() => {
-                  document.getElementById('ownership-section')?.scrollIntoView({ behavior: 'smooth' });
-                }}
-                className="status-pill cursor-pointer hover:scale-105 transition-all"
-                style={{
-                  background: 'rgba(16, 185, 129, 0.08)',
-                  color: '#059669',
-                  border: '1px solid rgba(16, 185, 129, 0.2)',
-                }}
+                onClick={() => document.getElementById('ownership-section')?.scrollIntoView({ behavior: 'smooth' })}
+                className="action-pill"
                 title="View golfer ownership"
               >
                 {'\u{1F4CB}'} Ownership
@@ -319,22 +293,26 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                                 const ownership = getOwnershipForGolfer(golfer, currentData.ownership);
                                 const pts = getPointsForGolfer(golfer, currentData.ownership);
                                 const live = espnData[golfer];
-                                const scoreColor = live?.score?.startsWith('-') ? '#16a34a' : live?.score?.startsWith('+') ? '#dc2626' : 'var(--gray-600)';
+                                const isCut = live?.isCut || live?.score === 'CUT';
+                                const scoreColor = isCut ? '#dc2626' : live?.score?.startsWith('-') ? '#16a34a' : live?.score?.startsWith('+') ? '#dc2626' : 'var(--gray-600)';
                                 return (
-                                  <div key={golfer} className="golfer-card">
+                                  <div key={golfer} className={`golfer-card ${isCut ? 'golfer-card-cut' : ''}`}>
+                                    {isCut && (
+                                      <span className="golfer-cut-label">CUT</span>
+                                    )}
                                     <GolferHeadshot golferName={golfer} size="md" espnHeadshot={live?.headshot} />
-                                    <p className="text-xs font-semibold truncate mt-1.5 w-full" style={{ color: 'var(--navy-800)' }}>{golfer}</p>
+                                    <p className="text-xs font-semibold truncate mt-1.5 w-full" style={{ color: isCut ? 'var(--gray-400)' : 'var(--navy-800)' }}>{golfer}</p>
                                     {live && (
                                       <div className="flex items-center justify-center gap-1.5 mt-1">
                                         <span className="text-xs cb-data font-bold" style={{ color: scoreColor }}>
                                           {live.score === '0' ? 'E' : live.score}
                                         </span>
-                                        <span className="text-xs text-gray-400">R{live.roundScore !== '-' ? `: ${live.roundScore}` : ''}</span>
+                                        {!isCut && <span className="text-xs text-gray-400">R{live.roundScore !== '-' ? `: ${live.roundScore}` : ''}</span>}
                                       </div>
                                     )}
                                     <div className="flex items-center justify-center gap-2 mt-1">
                                       <span className="text-xs" style={{ color: 'var(--gold-600)' }}>{ownership.toFixed(1)}%</span>
-                                      <span className="text-xs cb-data font-semibold" style={{ color: 'var(--navy-700)' }}>{pts.toFixed(1)} pts</span>
+                                      <span className="text-xs cb-data font-semibold" style={{ color: isCut ? 'var(--gray-400)' : 'var(--navy-700)' }}>{pts.toFixed(1)} pts</span>
                                     </div>
                                   </div>
                                 );

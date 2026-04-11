@@ -90,6 +90,7 @@ export interface GolferLiveData {
   headshot: string;
   country: string;
   countryFlag: string;
+  isCut: boolean;
 }
 
 export interface ESPNResponse {

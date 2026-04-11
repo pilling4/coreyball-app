@@ -224,19 +224,29 @@ body {
   border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
-/* Uniform status pills for tournament header */
-.status-pill {
+/* Consistent gold action pills */
+.action-pill {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  min-width: 90px;
-  padding: 4px 10px;
+  padding: 4px 12px;
   border-radius: 9999px;
   font-size: 0.68rem;
   font-weight: 600;
   text-align: center;
   white-space: nowrap;
+  background: linear-gradient(135deg, rgba(191, 167, 106, 0.12), rgba(168, 144, 88, 0.08));
+  color: var(--navy-800);
+  border: 1px solid rgba(168, 144, 88, 0.3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.action-pill:hover {
+  background: linear-gradient(135deg, rgba(191, 167, 106, 0.25), rgba(168, 144, 88, 0.15));
+  border-color: rgba(168, 144, 88, 0.5);
+  transform: scale(1.05);
 }
 
 /* ============================================================
@@ -344,6 +354,34 @@ body {
     0 2px 4px rgba(11, 30, 61, 0.08),
     0 8px 20px rgba(11, 30, 61, 0.05);
   transform: translateY(-1px);
+}
+
+/* Cut golfer overlay */
+.golfer-card-cut {
+  background: linear-gradient(170deg, #F3F4F6 0%, #E5E7EB 100%) !important;
+  border-color: var(--gray-300) !important;
+  opacity: 0.75;
+  position: relative;
+}
+
+.golfer-card-cut::before {
+  background: linear-gradient(90deg, var(--gray-400), var(--gray-300)) !important;
+  opacity: 0.2 !important;
+}
+
+.golfer-card-cut:hover {
+  opacity: 0.9;
+}
+
+.golfer-cut-label {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-size: 0.55rem;
+  font-weight: 800;
+  color: #dc2626;
+  letter-spacing: 0.05em;
+  z-index: 2;
 }
 
 /* ============================================================

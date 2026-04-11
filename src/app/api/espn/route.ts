@@ -24,6 +24,7 @@ interface ESPNCompetitor {
   uid: string;
   order: number;
   score: string;
+  status?: { displayValue?: string; type?: { abbreviation?: string } };
   athlete: ESPNAthlete;
   linescores?: ESPNLineScore[];
 }
@@ -45,6 +46,7 @@ export interface GolferLiveData {
   headshot: string;
   country: string;
   countryFlag: string;
+  isCut: boolean;
 }
 
 function getHeadshotUrl(espnId: string): string {
@@ -57,14 +59,19 @@ function parseCompetitor(c: ESPNCompetitor): GolferLiveData {
     ?.filter((ls) => ls.displayValue !== '-')
     .pop();
 
+  const statusAbbr = c.status?.type?.abbreviation?.toLowerCase() || '';
+  const statusDisplay = c.status?.displayValue?.toLowerCase() || '';
+  const isCut = statusAbbr === 'cut' || statusDisplay === 'cut' || c.score === 'CUT';
+
   return {
     espnId: c.id,
     name: c.athlete.fullName,
-    score: c.score || 'E',
+    score: isCut ? 'CUT' : (c.score || 'E'),
     roundScore: latestRound?.displayValue || '-',
     headshot: getHeadshotUrl(c.id),
     country: c.athlete.flag?.alt || '',
     countryFlag: c.athlete.flag?.href || '',
+    isCut,
   };
 }
 
