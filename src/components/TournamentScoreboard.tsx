@@ -303,11 +303,10 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                                     <GolferHeadshot golferName={golfer} size="md" espnHeadshot={live?.headshot} />
                                     <p className="text-xs font-semibold truncate mt-1.5 w-full" style={{ color: isCut ? 'var(--gray-400)' : 'var(--navy-800)' }}>{golfer}</p>
                                     {live && (
-                                      <div className="flex items-center justify-center gap-1.5 mt-1">
-                                        <span className="text-xs cb-data font-bold" style={{ color: scoreColor }}>
+                                      <div className="flex items-center justify-center mt-1">
+                                        <span className="text-sm cb-data font-bold" style={{ color: scoreColor }}>
                                           {live.score === '0' ? 'E' : live.score}
                                         </span>
-                                        {!isCut && <span className="text-xs text-gray-400">R{live.roundScore !== '-' ? `: ${live.roundScore}` : ''}</span>}
                                       </div>
                                     )}
                                     <div className="flex items-center justify-center gap-2 mt-1">
