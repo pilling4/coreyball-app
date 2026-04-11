@@ -43,9 +43,14 @@
   --font-serif: Georgia, 'Times New Roman', serif;
 }
 
-html, body {
+html {
+  overflow-x: hidden;
+}
+
+body {
   overflow-x: hidden;
   width: 100%;
+  max-width: 100vw;
 }
 
 body {
@@ -314,6 +319,8 @@ body {
 
 .expand-detail td {
   padding: 0 !important;
+  max-width: 0;
+  overflow: hidden;
 }
 
 .lineup-panel {
@@ -322,6 +329,8 @@ body {
   border-bottom: 2px solid rgba(168, 144, 88, 0.12);
   box-shadow: inset 0 2px 8px rgba(11, 30, 61, 0.03);
   padding: 16px 20px;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .golfer-card {

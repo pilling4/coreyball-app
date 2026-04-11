@@ -131,14 +131,21 @@ export async function GET(request: NextRequest) {
       const requested = golferNames.split(',').map((n) => n.trim());
       result = {};
       for (const name of requested) {
-        // Try exact match first, then fuzzy (last name)
+        // Try exact match first
         if (allGolfers[name]) {
           result[name] = allGolfers[name];
         } else {
-          const lastName = name.split(' ').pop()?.toLowerCase();
-          const match = Object.entries(allGolfers).find(([n]) =>
-            n.toLowerCase().includes(lastName || '')
-          );
+          // Fuzzy match: require exact last name match (not partial includes)
+          const nameParts = name.toLowerCase().split(' ');
+          const lastName = nameParts[nameParts.length - 1];
+          const firstName = nameParts[0];
+          const match = Object.entries(allGolfers).find(([n]) => {
+            const parts = n.toLowerCase().split(' ');
+            const eLast = parts[parts.length - 1];
+            const eFirst = parts[0];
+            // Last name must match exactly, and first name should start similarly
+            return eLast === lastName && eFirst.startsWith(firstName.slice(0, 3));
+          });
           if (match) {
             result[name] = match[1];
           }
