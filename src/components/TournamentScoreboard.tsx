@@ -220,7 +220,6 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                 <th>Player</th>
                 <th>Points</th>
                 {(isInProgress || isCompleted) && <th>Holes Rem.</th>}
-                <th>Payout</th>
                 {isInProgress && <th className="w-10"></th>}
               </tr>
             </thead>
@@ -257,24 +256,6 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                           {getHolesRemaining(entry.timeRemaining)}
                         </td>
                       )}
-                      <td>
-                        {entry.payout > 0 && isCompleted ? (
-                          <span className="inline-flex items-center gap-1 justify-center">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setGolfClap({ player: entry.entryName, tournament: currentTournament.name }); }}
-                              className="cursor-pointer hover:scale-125 transition-transform"
-                              title="Golf clap!"
-                            >
-                              {'\u{1F3C6}'}
-                            </button>
-                            <span className="font-semibold" style={{ color: '#16a34a' }}>
-                              ${entry.payout}
-                            </span>
-                          </span>
-                        ) : (
-                          <span style={{ color: 'var(--gray-300)' }}>&mdash;</span>
-                        )}
-                      </td>
                       {isInProgress && (
                         <td className="text-center">
                           <span className={`inline-block transition-transform duration-200 text-gray-400 ${isExpanded ? 'rotate-180' : ''}`}>
@@ -286,24 +267,18 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                     {/* Expanded Lineup Detail */}
                     {isInProgress && isExpanded && (
                       <tr className="expand-detail">
-                        <td colSpan={6} style={{ textAlign: 'left' }}>
+                        <td colSpan={5} style={{ textAlign: 'left' }}>
                           <div className="animate-expandRow overflow-hidden lineup-panel">
                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5">
                               {[...entry.lineup].sort((a, b) => getPointsForGolfer(b, currentData.ownership) - getPointsForGolfer(a, currentData.ownership)).map(golfer => {
                                 const ownership = getOwnershipForGolfer(golfer, currentData.ownership);
                                 const pts = getPointsForGolfer(golfer, currentData.ownership);
                                 const live = espnData[golfer];
-                                // Cut detection: ESPN says cut, OR golfer not found in ESPN after Round 2 (ESPN only returns active golfers)
-                                const espnHasData = Object.keys(espnData).length > 0;
-                                const isCut = live?.isCut || live?.score === 'CUT' || (espnHasData && !live && currentTournament.currentRound >= 2);
-                                const scoreColor = isCut ? '#dc2626' : live?.score?.startsWith('-') ? '#16a34a' : live?.score?.startsWith('+') ? '#dc2626' : 'var(--gray-600)';
+                                const scoreColor = live?.score?.startsWith('-') ? '#16a34a' : live?.score?.startsWith('+') ? '#dc2626' : 'var(--gray-600)';
                                 return (
-                                  <div key={golfer} className={`golfer-card ${isCut ? 'golfer-card-cut' : ''}`}>
-                                    {isCut && (
-                                      <span className="golfer-cut-label">CUT</span>
-                                    )}
+                                  <div key={golfer} className="golfer-card">
                                     <GolferHeadshot golferName={golfer} size="md" espnHeadshot={live?.headshot} />
-                                    <p className="text-xs font-semibold truncate mt-1.5 w-full" style={{ color: isCut ? 'var(--gray-400)' : 'var(--navy-800)' }}>{golfer}</p>
+                                    <p className="text-xs font-semibold truncate mt-1.5 w-full" style={{ color: 'var(--navy-800)' }}>{golfer}</p>
                                     {live && (
                                       <div className="flex items-center justify-center mt-1">
                                         <span className="text-sm cb-data font-bold" style={{ color: scoreColor }}>
@@ -313,7 +288,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                                     )}
                                     <div className="flex items-center justify-center gap-2 mt-1">
                                       <span className="text-xs" style={{ color: 'var(--gold-600)' }}>{ownership.toFixed(1)}%</span>
-                                      <span className="text-xs cb-data font-semibold" style={{ color: isCut ? 'var(--gray-400)' : 'var(--navy-700)' }}>{pts.toFixed(1)} pts</span>
+                                      <span className="text-xs cb-data font-semibold" style={{ color: 'var(--navy-700)' }}>{pts.toFixed(1)} pts</span>
                                     </div>
                                   </div>
                                 );
