@@ -125,7 +125,7 @@ export default function AdminPage() {
       const { error: delOwnerErr } = await sb.from('golfer_ownership').delete().eq('tournament_id', tournament.id);
       if (delOwnerErr) throw new Error(`Delete ownership failed: ${delOwnerErr.message}`);
 
-      // Step 3: Insert new entries (batch in chunks of 20 to avoid payload limits)
+      // Step 3: Insert new entries one at a time for reliability
       const entryRows = previewData.entries.map(e => ({
         tournament_id: tournament.id,
         entry_id: e.entryId,
@@ -137,14 +137,15 @@ export default function AdminPage() {
         payout: e.payout,
       }));
 
-      for (let i = 0; i < entryRows.length; i += 20) {
-        const batch = entryRows.slice(i, i + 20);
-        const { error: insertErr } = await sb.from('entries').insert(batch);
-        if (insertErr) throw new Error(`Insert entries batch ${i / 20 + 1} failed: ${insertErr.message}`);
-      }
+      const { error: insertEntriesErr } = await sb.from('entries').upsert(entryRows, { onConflict: 'tournament_id,entry_id' });
+      if (insertEntriesErr) throw new Error(`Insert entries failed: ${insertEntriesErr.message}`);
 
-      // Step 4: Insert ownership data
-      const ownershipRows = previewData.ownership.map(o => ({
+      // Step 4: Insert ownership data — deduplicate by golfer name first
+      const ownershipMap = new Map<string, typeof previewData.ownership[0]>();
+      for (const o of previewData.ownership) {
+        ownershipMap.set(o.golferName, o); // last occurrence wins
+      }
+      const ownershipRows = Array.from(ownershipMap.values()).map(o => ({
         tournament_id: tournament.id,
         golfer_name: o.golferName,
         roster_position: o.rosterPosition,
@@ -152,11 +153,8 @@ export default function AdminPage() {
         fpts: o.fpts,
       }));
 
-      for (let i = 0; i < ownershipRows.length; i += 20) {
-        const batch = ownershipRows.slice(i, i + 20);
-        const { error: insertErr } = await sb.from('golfer_ownership').insert(batch);
-        if (insertErr) throw new Error(`Insert ownership batch ${i / 20 + 1} failed: ${insertErr.message}`);
-      }
+      const { error: insertOwnerErr } = await sb.from('golfer_ownership').upsert(ownershipRows, { onConflict: 'tournament_id,golfer_name' });
+      if (insertOwnerErr) throw new Error(`Insert ownership failed: ${insertOwnerErr.message}`);
 
       setStatus('success');
       setMessage(`Successfully uploaded ${previewData.entries.length} entries and ${previewData.ownership.length} golfers for ${tournament.name} (Round ${currentRound})`);
