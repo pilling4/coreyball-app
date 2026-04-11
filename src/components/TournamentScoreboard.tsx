@@ -118,32 +118,32 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
               {new Date(currentTournament.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} &ndash; {new Date(currentTournament.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
             </p>
           </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Status labels (not clickable) */}
-            {currentTournament.isMajor && (
-              <span className="text-xs font-semibold" style={{ color: 'var(--gold-600)' }}>
-                Major &middot; 1.25x
-              </span>
-            )}
-            {currentData ? (
-              <span className="text-xs font-semibold" style={{ color: isCompleted ? '#16a34a' : '#2563eb' }}>
-                {getRoundLabel(currentTournament.currentRound)}
-              </span>
-            ) : (
-              <span className="text-xs font-semibold" style={{ color: 'var(--gray-400)' }}>
-                Upcoming
-              </span>
-            )}
-
-            {/* Divider */}
-            {currentData && <span style={{ color: 'var(--gray-300)' }}>|</span>}
-
-            {/* Action pills — 1. Insights 2. Ownership 3. Lineups 4. Payouts */}
-            {currentData && (
-              <div className="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-2">
+          <div className="flex flex-col gap-1.5">
+            {/* Row 1: Major · Round · Insights */}
+            <div className="flex items-center gap-2">
+              {currentTournament.isMajor && (
+                <span className="text-xs font-semibold" style={{ color: 'var(--gold-600)' }}>
+                  Major 1.25x
+                </span>
+              )}
+              {currentData ? (
+                <span className="text-xs font-semibold" style={{ color: isCompleted ? '#16a34a' : '#2563eb' }}>
+                  {getRoundLabel(currentTournament.currentRound)}
+                </span>
+              ) : (
+                <span className="text-xs font-semibold" style={{ color: 'var(--gray-400)' }}>
+                  Upcoming
+                </span>
+              )}
+              {currentData && (
                 <button onClick={() => setShowInsights(true)} className="action-pill" title="Tournament insights">
                   {'\u{1F4CA}'} Insights
                 </button>
+              )}
+            </div>
+            {/* Row 2: Ownership · Lineups · Payouts */}
+            <div className="flex items-center gap-2">
+              {currentData && (
                 <button
                   onClick={() => document.getElementById('ownership-section')?.scrollIntoView({ behavior: 'smooth' })}
                   className="action-pill"
@@ -151,19 +151,16 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                 >
                   {'\u{1F4CB}'} Ownership
                 </button>
+              )}
+              {currentData && (
                 <button onClick={() => setShowCutSummary(true)} className="action-pill" title="View lineups">
                   {'\u2702\uFE0F'} Lineups
                 </button>
-                <button onClick={() => setShowPayouts(true)} className="action-pill" title="View payout structure">
-                  {'\u{1F4B0}'} Payouts
-                </button>
-              </div>
-            )}
-            {!currentData && (
+              )}
               <button onClick={() => setShowPayouts(true)} className="action-pill" title="View payout structure">
                 {'\u{1F4B0}'} Payouts
               </button>
-            )}
+            </div>
           </div>
         </div>
         {currentData && currentTournament.updatedAt && (
