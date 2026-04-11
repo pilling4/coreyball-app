@@ -54,14 +54,19 @@ function getHeadshotUrl(espnId: string): string {
   return `https://a.espncdn.com/combiner/i?img=/i/headshots/golf/players/full/${espnId}.png&w=96&h=70&cb=1`;
 }
 
-function parseCompetitor(c: ESPNCompetitor): GolferLiveData {
+function getCompletedRounds(c: ESPNCompetitor): number {
+  if (!c.linescores) return 0;
+  return c.linescores.filter(ls => ls.displayValue && ls.displayValue !== '-').length;
+}
+
+function parseCompetitor(c: ESPNCompetitor, maxRounds: number): GolferLiveData {
+  const completedRounds = getCompletedRounds(c);
   const latestRound = c.linescores
     ?.filter((ls) => ls.displayValue !== '-')
     .pop();
 
-  const statusAbbr = c.status?.type?.abbreviation?.toLowerCase() || '';
-  const statusDisplay = c.status?.displayValue?.toLowerCase() || '';
-  const isCut = statusAbbr === 'cut' || statusDisplay === 'cut' || c.score === 'CUT';
+  // A golfer is cut if after Round 2+, they have fewer completed rounds than the leaders
+  const isCut = maxRounds >= 3 && completedRounds <= 2 && completedRounds < maxRounds;
 
   return {
     espnId: c.id,
@@ -103,10 +108,13 @@ export async function GET(request: NextRequest) {
 
     const competitors = event.competitions[0].competitors;
 
+    // Determine max completed rounds across all competitors
+    const maxRounds = Math.max(...competitors.map(c => getCompletedRounds(c)), 0);
+
     // Build a lookup: golfer name -> live data
     const allGolfers: Record<string, GolferLiveData> = {};
     for (const c of competitors) {
-      const parsed = parseCompetitor(c);
+      const parsed = parseCompetitor(c, maxRounds);
       allGolfers[parsed.name] = parsed;
     }
 
