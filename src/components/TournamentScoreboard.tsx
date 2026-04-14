@@ -219,7 +219,8 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                 </th>
                 <th>Player</th>
                 <th>Points</th>
-                {(isInProgress || isCompleted) && <th>Holes Rem.</th>}
+                {isInProgress && <th>Holes Rem.</th>}
+                {isCompleted && <th>Payout</th>}
                 {isInProgress && <th className="w-10"></th>}
               </tr>
             </thead>
@@ -251,9 +252,14 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                       <td className="cb-data text-sm font-semibold">
                         {entry.points.toFixed(1)}
                       </td>
-                      {(isInProgress || isCompleted) && (
+                      {isInProgress && (
                         <td className="cb-data text-sm" style={{ color: 'var(--gray-500)' }}>
                           {getHolesRemaining(entry.timeRemaining)}
+                        </td>
+                      )}
+                      {isCompleted && (
+                        <td className="cb-data text-sm font-semibold" style={{ color: entry.payout > 0 ? '#16a34a' : 'var(--gray-400)' }}>
+                          {entry.payout > 0 ? `$${entry.payout.toLocaleString()}` : '\u2014'}
                         </td>
                       )}
                       {isInProgress && (

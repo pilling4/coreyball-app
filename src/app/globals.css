@@ -486,9 +486,9 @@ body {
 }
 
 .sb-col-rank { width: 36px; }
-.sb-col-player { width: 140px; text-align: left !important; padding-left: 12px !important; }
-.sb-col-total { width: 56px; }
-.sb-col-tourney { width: 48px; }
+.sb-col-player { text-align: left !important; padding-left: 12px !important; }
+.sb-col-total { width: 70px; }
+.sb-col-back { width: 60px; }
 
 .sb-col-upcoming {
   opacity: 0.3;
@@ -634,9 +634,8 @@ body {
   }
 
   .sb-col-rank { width: 28px; }
-  .sb-col-player { width: 100px; }
-  .sb-col-total { width: 44px; }
-  .sb-col-tourney { width: 38px; }
+  .sb-col-total { width: 50px; }
+  .sb-col-back { width: 46px; }
 
   .sb-table thead th {
     font-size: 0.5rem;
