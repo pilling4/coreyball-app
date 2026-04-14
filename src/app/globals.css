@@ -99,6 +99,23 @@ body {
   to { opacity: 1; max-height: 800px; }
 }
 
+/* Golf ball loading animation */
+.golf-ball-loader {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle at 35% 35%, #fff, #e0e0e0, #bbb);
+  border-radius: 50%;
+  top: 0;
+  animation: golfBallSlide 1.2s ease-in-out infinite alternate;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+@keyframes golfBallSlide {
+  0% { left: 0; }
+  100% { left: calc(100% - 10px); }
+}
+
 .animate-fadeIn { animation: fadeIn 0.6s ease-out forwards; }
 .animate-fadeInUp { animation: fadeInUp 0.6s ease-out forwards; }
 .animate-scaleIn { animation: scaleIn 0.8s ease-out forwards; }

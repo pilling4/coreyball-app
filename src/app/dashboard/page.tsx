@@ -76,9 +76,14 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-center">
-          <p className="text-2xl" style={{ color: 'var(--gold-500)' }}>{'\u{26F3}'}</p>
-          <p className="text-sm text-gray-400 mt-2">Loading...</p>
+        <div className="text-center flex flex-col items-center">
+          {/* Faded logo */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" className="w-20 h-20 object-contain opacity-25" />
+          {/* Golf ball sliding back and forth */}
+          <div className="mt-4 w-24 h-3 relative">
+            <div className="golf-ball-loader" />
+          </div>
         </div>
       </div>
     );
