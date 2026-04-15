@@ -595,6 +595,22 @@ body {
   color: var(--gold-500);
 }
 
+.sb-rank-up {
+  display: block;
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: #16a34a;
+  line-height: 1;
+}
+
+.sb-rank-down {
+  display: block;
+  font-size: 0.5rem;
+  font-weight: 700;
+  color: #dc2626;
+  line-height: 1;
+}
+
 .sb-col-player.sb-cell {
   text-align: left;
   padding-left: 12px;

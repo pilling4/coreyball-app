@@ -8,9 +8,10 @@ interface LeaderboardScoreboardProps {
   playerSeasons: PlayerSeason[];
   tournamentData: Record<string, TournamentData>;
   onPlayerClick: (handle: string) => void;
+  prevRanks?: Map<string, number>;
 }
 
-export default function LeaderboardScoreboard({ playerSeasons, tournamentData, onPlayerClick }: LeaderboardScoreboardProps) {
+export default function LeaderboardScoreboard({ playerSeasons, tournamentData, onPlayerClick, prevRanks }: LeaderboardScoreboardProps) {
   const TOURNAMENTS = useTournaments();
 
   const completedIds = new Set(TOURNAMENTS.filter(t => t.status === 'completed').map(t => t.id));
@@ -72,7 +73,15 @@ export default function LeaderboardScoreboard({ playerSeasons, tournamentData, o
                   className={`sb-row ${getTierClass(player.seasonRank)} ${showTierBreak ? 'sb-tier-break' : ''}`}
                 >
                   <td className="sb-col-rank sb-cell">
-                    {player.seasonRank}
+                    <span>{player.seasonRank}</span>
+                    {prevRanks && prevRanks.size > 0 && (() => {
+                      const prev = prevRanks.get(player.handle);
+                      if (!prev) return null;
+                      const diff = prev - player.seasonRank;
+                      if (diff > 0) return <span className="sb-rank-up">{'\u25B2'}{diff}</span>;
+                      if (diff < 0) return <span className="sb-rank-down">{'\u25BC'}{Math.abs(diff)}</span>;
+                      return null;
+                    })()}
                   </td>
                   <td className="sb-col-player sb-cell">
                     <button

@@ -25,17 +25,35 @@ export default function SeasonStandings({ playerSeasons, tournamentData, onPlaye
     TOURNAMENTS.filter(t => t.status === 'in_progress').map(t => t.id)
   );
 
+  // Determine the most recent tournament with data (for rank change calculation)
+  const activeIds = TOURNAMENTS
+    .filter(t => tournamentData[t.id])
+    .map(t => t.id);
+  const latestTournamentId = activeIds.length > 0 ? activeIds[activeIds.length - 1] : null;
+
   // Total Points = completed tournaments (with multiplier) + in-progress tournaments (with multiplier)
   const standingsData = playerSeasons.map(p => {
     let totalPts = 0;
+    let prevPts = 0; // points excluding the latest tournament
     for (const t of p.tournaments) {
       if (t.lineup.length === 0) continue;
       if (completedTournamentIds.has(t.tournamentId) || inProgressTournamentIds.has(t.tournamentId)) {
-        totalPts += calculateAdjustedPoints(t.points, t.multiplier);
+        const adj = calculateAdjustedPoints(t.points, t.multiplier);
+        totalPts += adj;
+        if (t.tournamentId !== latestTournamentId) {
+          prevPts += adj;
+        }
       }
     }
-    return { ...p, calculatedTotal: totalPts };
+    return { ...p, calculatedTotal: totalPts, prevTotal: prevPts };
   }).sort((a, b) => b.calculatedTotal - a.calculatedTotal);
+
+  // Calculate previous week ranks
+  const prevRanks = new Map<string, number>();
+  if (latestTournamentId && activeIds.length > 1) {
+    const prevSorted = [...standingsData].sort((a, b) => b.prevTotal - a.prevTotal);
+    prevSorted.forEach((p, i) => prevRanks.set(p.handle, i + 1));
+  }
 
   return (
     <div>
@@ -63,6 +81,7 @@ export default function SeasonStandings({ playerSeasons, tournamentData, onPlaye
         playerSeasons={playerSeasons}
         tournamentData={tournamentData}
         onPlayerClick={onPlayerClick}
+        prevRanks={prevRanks}
       />
 
       {/* Full Standings Table */}
@@ -88,11 +107,32 @@ export default function SeasonStandings({ playerSeasons, tournamentData, onPlaye
               return (
                 <tr key={player.handle}>
                   <td className="cb-data text-sm">
-                    {rankEmoji ? (
-                      <span className="text-base">{rankEmoji}</span>
-                    ) : (
-                      <span style={{ color: 'var(--gray-500)' }}>{i + 1}</span>
-                    )}
+                    <div className="flex items-center justify-center gap-1">
+                      {rankEmoji ? (
+                        <span className="text-base">{rankEmoji}</span>
+                      ) : (
+                        <span style={{ color: 'var(--gray-500)' }}>{i + 1}</span>
+                      )}
+                      {prevRanks.size > 0 && (() => {
+                        const currentRank = i + 1;
+                        const prevRank = prevRanks.get(player.handle);
+                        if (!prevRank) return null;
+                        const diff = prevRank - currentRank;
+                        if (diff > 0) return (
+                          <span className="text-xs font-semibold" style={{ color: '#16a34a' }}>
+                            {'\u25B2'}{diff}
+                          </span>
+                        );
+                        if (diff < 0) return (
+                          <span className="text-xs font-semibold" style={{ color: '#dc2626' }}>
+                            {'\u25BC'}{Math.abs(diff)}
+                          </span>
+                        );
+                        return (
+                          <span className="text-xs" style={{ color: 'var(--gray-400)' }}>{'\u2013'}</span>
+                        );
+                      })()}
+                    </div>
                   </td>
                   <td>
                     <button
