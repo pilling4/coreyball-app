@@ -60,7 +60,8 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
 
   const currentData = tournamentData[selectedId];
   const currentTournament = TOURNAMENTS.find(t => t.id === selectedId)!;
-  const isInProgress = currentTournament.status === 'in_progress';
+  const isPreRound = currentTournament.currentRound === 0;
+  const isInProgress = currentTournament.status === 'in_progress' && !isPreRound;
   const isCompleted = currentTournament.status === 'completed';
 
   // Collect all unique golfer names from the current tournament for ESPN lookup
@@ -185,7 +186,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
               <tr>
                 <th className="w-20 relative">
                   <span className="inline-flex items-center gap-1">
-                    Rank
+                    {isPreRound ? 'Season Rank' : 'Rank'}
                     {isInProgress && (
                       <button
                         onClick={() => setShowRankInfo(v => !v)}
@@ -232,7 +233,14 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
               </tr>
             </thead>
             <tbody>
-              {currentData.entries.map((entry, i) => {
+              {(isPreRound
+                ? [...currentData.entries].sort((a, b) => {
+                    const aRank = seasonRankMap.get(a.entryName) ?? 999;
+                    const bRank = seasonRankMap.get(b.entryName) ?? 999;
+                    return aRank - bRank;
+                  })
+                : currentData.entries
+              ).map((entry, i) => {
                 const isExpanded = expandedRows.has(entry.entryId);
                 return (
                   <Fragment key={entry.entryId}>
@@ -241,7 +249,10 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                       onClick={() => isInProgress && toggleRow(entry.entryId)}
                     >
                       <td className="cb-data text-sm" style={{ color: i < 3 ? 'var(--gold-600)' : 'var(--gray-500)', fontWeight: i < 3 ? 700 : 400 }}>
-                        {entry.rank}
+                        {isPreRound
+                          ? (seasonRankMap.get(entry.entryName) ?? '\u2014')
+                          : entry.rank
+                        }
                         {isInProgress && seasonRankMap.has(entry.entryName) && (
                           <span className="ml-0.5 text-xs" style={{ color: 'var(--gold-400)', fontWeight: 400 }}>
                             ({seasonRankMap.get(entry.entryName)})
