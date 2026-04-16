@@ -1,7 +1,9 @@
 'use client';
 
+import { useMemo } from 'react';
 import { PlayerSeason, TournamentData } from '@/lib/types';
 import { useTournaments } from '@/lib/TournamentContext';
+import { useESPNData } from '@/lib/useESPNData';
 import { analyzeChalkVsContrarian } from '@/lib/utils';
 import GolferHeadshot from './GolferHeadshot';
 
@@ -13,6 +15,14 @@ interface PlayerProfileProps {
 
 export default function PlayerProfile({ player, allTournamentData, onBack }: PlayerProfileProps) {
   const TOURNAMENTS = useTournaments();
+
+  // Collect all golfer names this player has drafted for ESPN headshots
+  const allGolferNames = useMemo(() => {
+    const names = new Set<string>();
+    for (const g of player.golferUsage) names.add(g.golferName);
+    return Array.from(names);
+  }, [player]);
+  const { golfers: espnData } = useESPNData(allGolferNames);
   const played = player.tournaments.filter(t => t.status !== 'upcoming' && t.lineup.length > 0);
 
   const completedTournamentIds = new Set(
@@ -133,7 +143,7 @@ export default function PlayerProfile({ player, allTournamentData, onBack }: Pla
             <div className="space-y-1">
               {player.golferUsage.map(g => (
                 <div key={g.golferName} className="flex items-center gap-2.5 py-1.5">
-                  <GolferHeadshot golferName={g.golferName} size="sm" />
+                  <GolferHeadshot golferName={g.golferName} size="sm" espnHeadshot={espnData[g.golferName]?.headshot} />
                   <span className="text-sm flex-1 min-w-0 truncate" style={{ color: 'var(--gray-700)' }}>{g.golferName}</span>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <span className="text-xs cb-data" style={{ color: 'var(--gold-600)' }}>
