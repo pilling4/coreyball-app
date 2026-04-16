@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, Fragment } from 'react';
-import { TournamentData, PlayerSeason } from '@/lib/types';
+import { Tournament, TournamentData, PlayerSeason } from '@/lib/types';
 import { getRoundLabel, formatUpdatedAt } from '@/lib/utils';
 import { useTournaments } from '@/lib/TournamentContext';
 import { useESPNData } from '@/lib/useESPNData';
@@ -31,10 +31,16 @@ function getPointsForGolfer(golferName: string, ownership: TournamentData['owner
   return found ? found.fpts : 0;
 }
 
+function getLatestTournamentWithData(tournaments: Tournament[], data: Record<string, TournamentData>): string {
+  // Pick the last tournament (by schedule order) that has uploaded data
+  const withData = tournaments.filter(t => data[t.id]);
+  return withData.length > 0 ? withData[withData.length - 1].id : tournaments[0].id;
+}
+
 export default function TournamentScoreboard({ tournamentData, playerSeasons, onPlayerClick, onTournamentChange }: TournamentScoreboardProps) {
   const TOURNAMENTS = useTournaments();
   const [selectedId, setSelectedId] = useState(
-    TOURNAMENTS.find(t => t.status !== 'upcoming')?.id || TOURNAMENTS[0].id
+    getLatestTournamentWithData(TOURNAMENTS, tournamentData)
   );
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
   const [golfClap, setGolfClap] = useState<{ player: string; tournament: string } | null>(null);

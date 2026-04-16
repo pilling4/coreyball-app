@@ -23,9 +23,7 @@ export default function DashboardPage() {
   const [tournamentData, setTournamentData] = useState<Record<string, TournamentData>>({});
   const [playerSeasons, setPlayerSeasons] = useState<PlayerSeason[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
-  const [selectedTournamentId, setSelectedTournamentId] = useState(
-    TOURNAMENTS.find(t => t.status !== 'upcoming')?.id || TOURNAMENTS[0].id
-  );
+  const [selectedTournamentId, setSelectedTournamentId] = useState(TOURNAMENTS[0].id);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,11 +57,17 @@ export default function DashboardPage() {
 
       setTournamentData(data);
       setPlayerSeasons(buildPlayerSeasons(Object.values(data)));
+      // Default to the latest tournament with uploaded data
+      const withData = tournaments.filter(t => data[t.id]);
+      if (withData.length > 0) setSelectedTournamentId(withData[withData.length - 1].id);
       setLoading(false);
     }
     loadData().catch(() => {
-      setTournamentData(getSeedData());
-      setPlayerSeasons(buildPlayerSeasons(Object.values(getSeedData())));
+      const seed = getSeedData();
+      setTournamentData(seed);
+      setPlayerSeasons(buildPlayerSeasons(Object.values(seed)));
+      const withData = TOURNAMENTS.filter(t => seed[t.id]);
+      if (withData.length > 0) setSelectedTournamentId(withData[withData.length - 1].id);
       setLoading(false);
     });
   }, []);
