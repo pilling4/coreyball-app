@@ -14,6 +14,7 @@ interface TournamentScoreboardProps {
   tournamentData: Record<string, TournamentData>;
   playerSeasons: PlayerSeason[];
   onPlayerClick: (handle: string) => void;
+  onTournamentChange?: (tournamentId: string) => void;
 }
 
 function getHolesRemaining(timeRemaining: number): string {
@@ -30,7 +31,7 @@ function getPointsForGolfer(golferName: string, ownership: TournamentData['owner
   return found ? found.fpts : 0;
 }
 
-export default function TournamentScoreboard({ tournamentData, playerSeasons, onPlayerClick }: TournamentScoreboardProps) {
+export default function TournamentScoreboard({ tournamentData, playerSeasons, onPlayerClick, onTournamentChange }: TournamentScoreboardProps) {
   const TOURNAMENTS = useTournaments();
   const [selectedId, setSelectedId] = useState(
     TOURNAMENTS.find(t => t.status !== 'upcoming')?.id || TOURNAMENTS[0].id
@@ -86,7 +87,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
           return (
             <button
               key={t.id}
-              onClick={() => { setSelectedId(t.id); setExpandedRows(new Set()); }}
+              onClick={() => { setSelectedId(t.id); setExpandedRows(new Set()); onTournamentChange?.(t.id); }}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
                 selectedId === t.id ? 'scale-105' : 'hover:scale-102'
               }`}

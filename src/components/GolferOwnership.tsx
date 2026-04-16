@@ -1,21 +1,18 @@
 'use client';
 
-import { useState } from 'react';
 import { TournamentData } from '@/lib/types';
 import { CHALK_THRESHOLD, CONTRARIAN_THRESHOLD } from '@/lib/constants';
 import { useTournaments } from '@/lib/TournamentContext';
 
 interface GolferOwnershipProps {
   tournamentData: Record<string, TournamentData>;
+  selectedTournamentId: string;
 }
 
-export default function GolferOwnership({ tournamentData }: GolferOwnershipProps) {
+export default function GolferOwnership({ tournamentData, selectedTournamentId }: GolferOwnershipProps) {
   const TOURNAMENTS = useTournaments();
-  const [selectedId, setSelectedId] = useState(
-    TOURNAMENTS.find(t => t.status !== 'upcoming')?.id || TOURNAMENTS[0].id
-  );
-
-  const currentData = tournamentData[selectedId];
+  const currentTournament = TOURNAMENTS.find(t => t.id === selectedTournamentId);
+  const currentData = tournamentData[selectedTournamentId];
 
   if (!currentData || currentData.ownership.length === 0) {
     return (
@@ -31,18 +28,11 @@ export default function GolferOwnership({ tournamentData }: GolferOwnershipProps
     <div>
       <div className="cb-card-header flex items-center justify-between">
         <span>Golfer Ownership</span>
-        <select
-          value={selectedId}
-          onChange={e => setSelectedId(e.target.value)}
-          className="text-xs px-2 py-1 rounded cursor-pointer outline-none"
-          style={{ background: 'var(--gray-50)', color: 'var(--gray-700)', border: '1px solid var(--gray-200)' }}
-        >
-          {TOURNAMENTS.map(t => (
-            <option key={t.id} value={t.id} disabled={!tournamentData[t.id]}>
-              {t.shortName} {!tournamentData[t.id] ? '(N/A)' : ''}
-            </option>
-          ))}
-        </select>
+        {currentTournament && (
+          <span className="text-xs font-medium" style={{ color: 'var(--gold-600)' }}>
+            {currentTournament.name}
+          </span>
+        )}
       </div>
 
       <div className="overflow-x-auto rounded-lg" style={{ border: '1px solid var(--gray-200)' }}>

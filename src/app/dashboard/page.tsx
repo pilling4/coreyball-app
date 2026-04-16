@@ -23,6 +23,9 @@ export default function DashboardPage() {
   const [tournamentData, setTournamentData] = useState<Record<string, TournamentData>>({});
   const [playerSeasons, setPlayerSeasons] = useState<PlayerSeason[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+  const [selectedTournamentId, setSelectedTournamentId] = useState(
+    TOURNAMENTS.find(t => t.status !== 'upcoming')?.id || TOURNAMENTS[0].id
+  );
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -113,9 +116,9 @@ export default function DashboardPage() {
         <main className="max-w-7xl mx-auto px-4 py-6">
           {activeTab === 'tournaments' && (
             <div className="space-y-8">
-              <TournamentScoreboard tournamentData={tournamentData} playerSeasons={playerSeasons} onPlayerClick={handlePlayerClick} />
+              <TournamentScoreboard tournamentData={tournamentData} playerSeasons={playerSeasons} onPlayerClick={handlePlayerClick} onTournamentChange={setSelectedTournamentId} />
               <div id="ownership-section" className="cb-card">
-                <GolferOwnership tournamentData={tournamentData} />
+                <GolferOwnership tournamentData={tournamentData} selectedTournamentId={selectedTournamentId} />
               </div>
             </div>
           )}
