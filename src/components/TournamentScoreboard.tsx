@@ -63,6 +63,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
   const isPreRound = currentTournament.currentRound === 0;
   const isInProgress = currentTournament.status === 'in_progress' && !isPreRound;
   const isCompleted = currentTournament.status === 'completed';
+  const isExpandable = isInProgress || isPreRound;
 
   // Collect all unique golfer names from the current tournament for ESPN lookup
   const allGolferNames = useMemo(() => {
@@ -229,7 +230,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                 <th>Points</th>
                 {isInProgress && <th>Holes Rem.</th>}
                 {isCompleted && <th>Payout</th>}
-                {isInProgress && <th className="w-10"></th>}
+                {isExpandable && <th className="w-10"></th>}
               </tr>
             </thead>
             <tbody>
@@ -245,8 +246,8 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                 return (
                   <Fragment key={entry.entryId}>
                     <tr
-                      className={isInProgress ? 'expandable-row' : ''}
-                      onClick={() => isInProgress && toggleRow(entry.entryId)}
+                      className={isExpandable ? 'expandable-row' : ''}
+                      onClick={() => isExpandable && toggleRow(entry.entryId)}
                     >
                       <td className="cb-data text-sm" style={{ color: i < 3 ? 'var(--gold-600)' : 'var(--gray-500)', fontWeight: i < 3 ? 700 : 400 }}>
                         {isPreRound
@@ -280,7 +281,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                           {entry.payout > 0 ? `$${entry.payout.toLocaleString()}` : '\u2014'}
                         </td>
                       )}
-                      {isInProgress && (
+                      {isExpandable && (
                         <td className="text-center">
                           <span className={`inline-block transition-transform duration-200 text-gray-400 ${isExpanded ? 'rotate-180' : ''}`}>
                             {'\u25BE'}
@@ -289,7 +290,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                       )}
                     </tr>
                     {/* Expanded Lineup Detail */}
-                    {isInProgress && isExpanded && (
+                    {isExpandable && isExpanded && (
                       <tr className="expand-detail">
                         <td colSpan={5} style={{ textAlign: 'left' }}>
                           <div className="animate-expandRow overflow-hidden lineup-panel">
