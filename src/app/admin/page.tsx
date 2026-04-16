@@ -12,7 +12,7 @@ export default function AdminPage() {
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [selectedTournament, setSelectedTournament] = useState(TOURNAMENTS[0].id);
-  const [currentRound, setCurrentRound] = useState(1);
+  const [currentRound, setCurrentRound] = useState(0); // 0 = pre-round ownership only
   const [csvText, setCsvText] = useState('');
   const [status, setStatus] = useState<'idle' | 'preview' | 'uploading' | 'success' | 'error'>('idle');
   const [message, setMessage] = useState('');
@@ -102,6 +102,8 @@ export default function AdminPage() {
     const sb = getSupabaseClient()!;
 
     try {
+      const isPreRound = currentRound === 0;
+
       // Step 1: Upsert tournament metadata
       const { error: tourneyErr } = await sb.from('tournaments').upsert({
         id: tournament.id,
@@ -112,8 +114,8 @@ export default function AdminPage() {
         end_date: tournament.endDate,
         is_major: tournament.isMajor,
         multiplier: tournament.multiplier,
-        status: currentRound >= 4 ? 'completed' : 'in_progress',
-        current_round: currentRound,
+        status: isPreRound ? 'in_progress' : currentRound >= 4 ? 'completed' : 'in_progress',
+        current_round: isPreRound ? 0 : currentRound,
         updated_at: new Date().toISOString(),
       });
       if (tourneyErr) throw new Error(`Tournament upsert failed: ${tourneyErr.message}`);
@@ -125,16 +127,16 @@ export default function AdminPage() {
       const { error: delOwnerErr } = await sb.from('golfer_ownership').delete().eq('tournament_id', tournament.id);
       if (delOwnerErr) throw new Error(`Delete ownership failed: ${delOwnerErr.message}`);
 
-      // Step 3: Insert new entries one at a time for reliability
+      // Step 3: Insert new entries — zero out scores for pre-round uploads
       const entryRows = previewData.entries.map(e => ({
         tournament_id: tournament.id,
         entry_id: e.entryId,
         entry_name: e.entryName,
-        rank: e.rank,
-        points: e.points,
-        time_remaining: e.timeRemaining,
+        rank: isPreRound ? 0 : e.rank,
+        points: isPreRound ? 0 : e.points,
+        time_remaining: isPreRound ? 0 : e.timeRemaining,
         lineup: e.lineup,
-        payout: e.payout,
+        payout: isPreRound ? 0 : e.payout,
       }));
 
       const { error: insertEntriesErr } = await sb.from('entries').upsert(entryRows, { onConflict: 'tournament_id,entry_id' });
@@ -150,14 +152,17 @@ export default function AdminPage() {
         golfer_name: o.golferName,
         roster_position: o.rosterPosition,
         pct_drafted: o.pctDrafted,
-        fpts: o.fpts,
+        fpts: isPreRound ? 0 : o.fpts,
       }));
 
       const { error: insertOwnerErr } = await sb.from('golfer_ownership').upsert(ownershipRows, { onConflict: 'tournament_id,golfer_name' });
       if (insertOwnerErr) throw new Error(`Insert ownership failed: ${insertOwnerErr.message}`);
 
       setStatus('success');
-      setMessage(`Successfully uploaded ${previewData.entries.length} entries and ${previewData.ownership.length} golfers for ${tournament.name} (Round ${currentRound})`);
+      setMessage(isPreRound
+        ? `Successfully uploaded ownership & lineups for ${tournament.name} (scores zeroed — upload round results after completion)`
+        : `Successfully uploaded ${previewData.entries.length} entries and ${previewData.ownership.length} golfers for ${tournament.name} (Round ${currentRound})`
+      );
     } catch (err) {
       setStatus('error');
       setMessage(`Upload error: ${err instanceof Error ? err.message : err}`);
@@ -212,18 +217,24 @@ export default function AdminPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Round Completed</label>
+              <label className="block text-xs text-gray-400 mb-1">Upload Type</label>
               <select
                 value={currentRound}
                 onChange={e => setCurrentRound(parseInt(e.target.value))}
                 className="w-full px-3 py-2 rounded text-sm outline-none cursor-pointer"
                 style={{ background: 'var(--gray-50)', color: 'var(--gray-700)', border: '1px solid var(--gray-200)' }}
               >
+                <option value={0}>Pre-Round (Ownership Only)</option>
                 <option value={1}>Round 1 (Thursday)</option>
                 <option value={2}>Round 2 (Friday - Cut)</option>
                 <option value={3}>Round 3 (Saturday)</option>
                 <option value={4}>Round 4 (Sunday - Final)</option>
               </select>
+              {currentRound === 0 && (
+                <p className="text-xs mt-1" style={{ color: 'var(--gold-600)' }}>
+                  Imports lineups & ownership only — scores will show as 0 until a round upload.
+                </p>
+              )}
             </div>
           </div>
 
