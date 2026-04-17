@@ -30,10 +30,9 @@ export default function PlayerProfile({ player, allTournamentData, onBack }: Pla
   );
 
   // Only count cut data for tournaments where the cut has happened (round 3+ or completed)
-  const cutEligible = played.filter(t => {
-    const tourney = TOURNAMENTS.find(tr => tr.id === t.tournamentId);
-    return tourney && (tourney.status === 'completed' || tourney.currentRound >= 3);
-  });
+  const cutEligible = played.filter(t =>
+    t.status === 'completed' || t.currentRound >= 3
+  );
   const totalCutsMade = cutEligible.reduce((sum, t) => sum + t.cutsMade, 0);
   const totalGolfers = cutEligible.reduce((sum, t) => sum + t.totalGolfers, 0);
 
@@ -228,11 +227,9 @@ export default function PlayerProfile({ player, allTournamentData, onBack }: Pla
                       {t.adjustedPoints.toFixed(1)}
                     </td>
                     <td className="text-sm">
-                      {(() => {
-                        const tourney = TOURNAMENTS.find(tr => tr.id === t.tournamentId);
-                        const cutHappened = tourney && (tourney.status === 'completed' || tourney.currentRound >= 3);
-                        return cutHappened ? `${t.cutsMade}/${t.totalGolfers}` : '\u2014';
-                      })()}
+                      {(t.status === 'completed' || t.currentRound >= 3)
+                        ? `${t.cutsMade}/${t.totalGolfers}`
+                        : '\u2014'}
                     </td>
                     <td>
                       {isCompleted && t.payout > 0 ? (

@@ -118,6 +118,7 @@ export function buildPlayerSeasons(allTournamentData: TournamentData[]): PlayerS
         cutsMade,
         totalGolfers,
         status: t.status,
+        currentRound: t.currentRound,
       });
 
       player.totalPoints += adjustedPoints;
@@ -147,6 +148,7 @@ export function buildPlayerSeasons(allTournamentData: TournamentData[]): PlayerS
           cutsMade: 0,
           totalGolfers: 0,
           status: 'completed',
+          currentRound: td.tournament.currentRound,
         });
       }
     }

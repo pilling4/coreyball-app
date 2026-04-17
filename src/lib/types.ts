@@ -60,6 +60,7 @@ export interface PlayerTournamentResult {
   cutsMade: number;
   totalGolfers: number;
   status: 'upcoming' | 'in_progress' | 'completed';
+  currentRound: number;
 }
 
 export interface GolferUsage {
