@@ -244,7 +244,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
           <table className="cb-table">
             <thead>
               <tr>
-                <th className="w-20 relative">
+                <th className="w-20 relative" style={{ paddingLeft: '28px' }}>
                   <span className="inline-flex items-center gap-1">
                     {isPreRound ? 'Season Rank' : 'Rank'}
                     {isInProgress && (
@@ -287,7 +287,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                 </th>
                 <th>Player</th>
                 <th>Points</th>
-                {isInProgress && <th>Holes</th>}
+                {isInProgress && <th style={{ paddingLeft: '36px' }}>Holes</th>}
                 {isCompleted && <th>Payout</th>}
                 {isExpandable && <th className="w-10"></th>}
               </tr>
@@ -308,7 +308,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                       className={isExpandable ? 'expandable-row' : ''}
                       onClick={() => isExpandable && toggleRow(entry.entryId)}
                     >
-                      <td className="cb-data text-sm" style={{ color: i < 3 ? 'var(--gold-600)' : 'var(--gray-500)', fontWeight: i < 3 ? 700 : 400 }}>
+                      <td className="cb-data text-sm" style={{ color: i < 3 ? 'var(--gold-600)' : 'var(--gray-500)', fontWeight: i < 3 ? 700 : 400, paddingLeft: '28px' }}>
                         {isPreRound
                           ? (seasonRankMap.get(entry.entryName) ?? '\u2014')
                           : entry.rank
@@ -331,7 +331,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                         {entry.points.toFixed(1)}
                       </td>
                       {isInProgress && (
-                        <td className="cb-data text-sm" style={{ color: 'var(--gray-500)' }}>
+                        <td className="cb-data text-sm" style={{ color: 'var(--gray-500)', paddingLeft: '36px' }}>
                           {getHolesRemaining(entry.timeRemaining)}
                         </td>
                       )}
