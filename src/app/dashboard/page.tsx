@@ -104,7 +104,7 @@ export default function DashboardPage() {
         <TournamentProvider tournaments={tournaments}>
           <div className="min-h-screen bg-white">
             <Navigation activeTab={activeTab} onTabChange={t => { setSelectedPlayer(null); setActiveTab(t); }} />
-            <main className="max-w-7xl mx-auto px-4 py-6">
+            <main className="max-w-7xl mx-auto px-4 py-6 pb-24 md:pb-6">
               <PlayerProfile player={player} allTournamentData={tournamentData} onBack={handleBack} />
             </main>
           </div>
