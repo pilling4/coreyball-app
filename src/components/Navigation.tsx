@@ -32,14 +32,14 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
       >
         <div className="max-w-7xl mx-auto px-4">
           <div className="relative flex items-center h-14">
-            {/* Centered logo (mobile + desktop) */}
-            <div className="absolute left-1/2 -translate-x-1/2 flex items-center md:static md:left-auto md:translate-x-0">
+            {/* Centered logo — absolutely positioned so it stays dead-center regardless of siblings */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center pointer-events-none">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png?v=3" alt="Coreyball" className="w-10 h-10 object-contain" />
+              <img src="/logo.png?v=5" alt="Coreyball" className="w-10 h-10 object-contain" />
             </div>
 
-            {/* Desktop Tabs — hidden on mobile */}
-            <nav className="hidden md:flex gap-1 ml-6">
+            {/* Desktop Tabs — left side, hidden on mobile */}
+            <nav className="hidden md:flex gap-1">
               {TABS.map(tab => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -65,10 +65,10 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
               })}
             </nav>
 
-            {/* Admin link — pushed to right */}
+            {/* Admin link — always pushed to the right */}
             <a
               href="/admin"
-              className="ml-auto text-xs px-3 py-1.5 rounded border transition-all"
+              className="ml-auto text-xs px-3 py-1.5 rounded border transition-all relative z-10"
               style={{ color: '#64748b', borderColor: '#334155' }}
             >
               Admin
