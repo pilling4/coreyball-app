@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useRef, Fragment } from 'react';
+import { Sparkles, PieChart, ClipboardList, Banknote } from 'lucide-react';
 import { Tournament, TournamentData, PlayerSeason } from '@/lib/types';
 import { getRoundLabel, formatUpdatedAt } from '@/lib/utils';
 import { useTournaments } from '@/lib/TournamentContext';
@@ -9,6 +10,48 @@ import GolfClap from './GolfClap';
 import PayoutModal from './PayoutModal';
 import CutSummary from './CutSummary';
 import GolferHeadshot from './GolferHeadshot';
+
+interface ActionTileProps {
+  Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
+function ActionTile({ Icon, label, onClick, disabled }: ActionTileProps) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`group flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg border transition-all ${
+        disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:-translate-y-0.5'
+      }`}
+      style={{
+        background: 'var(--white)',
+        borderColor: 'var(--gray-200)',
+        color: 'var(--navy-800)',
+        boxShadow: disabled ? 'none' : '0 1px 2px rgba(15, 23, 42, 0.04)',
+      }}
+      onMouseEnter={(e) => {
+        if (disabled) return;
+        e.currentTarget.style.borderColor = 'var(--gold-500)';
+        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(191,167,106,0.08), rgba(191,167,106,0.02))';
+        e.currentTarget.style.boxShadow = '0 4px 12px rgba(191, 167, 106, 0.18)';
+      }}
+      onMouseLeave={(e) => {
+        if (disabled) return;
+        e.currentTarget.style.borderColor = 'var(--gray-200)';
+        e.currentTarget.style.background = 'var(--white)';
+        e.currentTarget.style.boxShadow = '0 1px 2px rgba(15, 23, 42, 0.04)';
+      }}
+    >
+      <Icon className="w-5 h-5" strokeWidth={1.75} />
+      <span className="text-[11px] font-semibold tracking-wide uppercase" style={{ letterSpacing: '0.04em' }}>
+        {label}
+      </span>
+    </button>
+  );
+}
 
 interface TournamentScoreboardProps {
   tournamentData: Record<string, TournamentData>;
@@ -144,56 +187,54 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
               {new Date(currentTournament.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} &ndash; {new Date(currentTournament.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}
             </p>
           </div>
-          <div className="flex flex-col gap-1.5">
-            {/* Row 1: Major · Round · Insights */}
-            <div className="flex items-center gap-2">
-              {currentTournament.isMajor && (
-                <span className="text-xs font-semibold" style={{ color: 'var(--gold-600)' }}>
-                  Major 1.25x
-                </span>
-              )}
-              {currentData ? (
-                <span className="text-xs font-semibold" style={{ color: isCompleted ? '#16a34a' : '#2563eb' }}>
-                  {getRoundLabel(currentTournament.currentRound)}
-                </span>
-              ) : (
-                <span className="text-xs font-semibold" style={{ color: 'var(--gray-400)' }}>
-                  Upcoming
-                </span>
-              )}
-              {currentData && (
-                <button onClick={() => setShowInsights(true)} className="action-pill" title="Tournament insights">
-                  {'\u{1F4CA}'} Insights
-                </button>
-              )}
-            </div>
-            {/* Row 2: Ownership · Lineups · Payouts */}
-            <div className="flex items-center gap-2">
-              {currentData && (
-                <button
-                  onClick={() => document.getElementById('ownership-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="action-pill"
-                  title="View golfer ownership"
-                >
-                  {'\u{1F4CB}'} Ownership
-                </button>
-              )}
-              {currentData && (
-                <button onClick={() => setShowCutSummary(true)} className="action-pill" title="View lineups">
-                  {'\u2702\uFE0F'} Lineups
-                </button>
-              )}
-              <button onClick={() => setShowPayouts(true)} className="action-pill" title="View payout structure">
-                {'\u{1F4B0}'} Payouts
-              </button>
-            </div>
+          <div className="flex items-center gap-2">
+            {currentTournament.isMajor && (
+              <span className="text-xs font-semibold" style={{ color: 'var(--gold-600)' }}>
+                Major 1.25x
+              </span>
+            )}
+            {currentData ? (
+              <span className="text-xs font-semibold" style={{ color: isCompleted ? '#16a34a' : '#2563eb' }}>
+                {getRoundLabel(currentTournament.currentRound)}
+              </span>
+            ) : (
+              <span className="text-xs font-semibold" style={{ color: 'var(--gray-400)' }}>
+                Upcoming
+              </span>
+            )}
           </div>
         </div>
         {currentData && currentTournament.updatedAt && (
           <p className="text-xs mt-2" style={{ color: 'var(--gold-600)' }}>
-            Updated {formatUpdatedAt(currentTournament.updatedAt)} &middot; {getRoundLabel(currentTournament.currentRound)}
+            Updated {formatUpdatedAt(currentTournament.updatedAt)}
           </p>
         )}
+        {/* Action tiles */}
+        <div className="mt-4 pt-4 grid grid-cols-4 gap-2" style={{ borderTop: '1px solid var(--gray-200)' }}>
+          <ActionTile
+            Icon={Sparkles}
+            label="Insights"
+            onClick={() => setShowInsights(true)}
+            disabled={!currentData}
+          />
+          <ActionTile
+            Icon={PieChart}
+            label="Ownership"
+            onClick={() => document.getElementById('ownership-section')?.scrollIntoView({ behavior: 'smooth' })}
+            disabled={!currentData}
+          />
+          <ActionTile
+            Icon={ClipboardList}
+            label="Lineups"
+            onClick={() => setShowCutSummary(true)}
+            disabled={!currentData}
+          />
+          <ActionTile
+            Icon={Banknote}
+            label="Payouts"
+            onClick={() => setShowPayouts(true)}
+          />
+        </div>
       </div>
 
       {/* Scoreboard Table */}
