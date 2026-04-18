@@ -64,21 +64,16 @@ function getCompletedRounds(c: ESPNCompetitor): number {
   return c.linescores.filter(ls => ls.displayValue && ls.displayValue !== '-').length;
 }
 
-function parseCompetitor(c: ESPNCompetitor, maxRounds: number): GolferLiveData {
-  const completedRounds = getCompletedRounds(c);
+function parseCompetitor(c: ESPNCompetitor, _maxRounds: number): GolferLiveData {
   const latestRound = c.linescores
     ?.filter((ls) => ls.displayValue !== '-')
     .pop();
 
-  // Multiple ways to detect a cut:
-  // 1. ESPN status field says "cut"
+  // Only trust ESPN's explicit cut status — never infer from round counts.
+  // Round-based inference causes false positives on no-cut events (e.g. RBC Heritage).
   const statusAbbr = (c.status?.type?.abbreviation || '').toLowerCase();
   const statusDisplay = (c.status?.displayValue || '').toLowerCase();
-  const espnSaysCut = statusAbbr === 'cut' || statusDisplay.includes('cut') || (c.score || '').toUpperCase() === 'CUT';
-  // 2. After Round 2, they have fewer completed rounds than the leaders
-  const roundBasedCut = maxRounds >= 3 && completedRounds <= 2 && completedRounds < maxRounds;
-
-  const isCut = espnSaysCut || roundBasedCut;
+  const isCut = statusAbbr === 'cut' || statusDisplay.includes('cut') || (c.score || '').toUpperCase() === 'CUT';
 
   return {
     espnId: c.id,
