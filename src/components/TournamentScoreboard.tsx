@@ -23,10 +23,14 @@ function ActionTile({ Icon, label, onClick, disabled }: ActionTileProps) {
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`group flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg border transition-all ${
+      aria-label={label}
+      title={label}
+      className={`flex items-center justify-center rounded-lg border transition-all ${
         disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:-translate-y-0.5'
       }`}
       style={{
+        width: '40px',
+        height: '40px',
         background: 'var(--white)',
         borderColor: 'var(--gray-200)',
         color: 'var(--navy-800)',
@@ -35,7 +39,7 @@ function ActionTile({ Icon, label, onClick, disabled }: ActionTileProps) {
       onMouseEnter={(e) => {
         if (disabled) return;
         e.currentTarget.style.borderColor = 'var(--gold-500)';
-        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(191,167,106,0.08), rgba(191,167,106,0.02))';
+        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(191,167,106,0.10), rgba(191,167,106,0.03))';
         e.currentTarget.style.boxShadow = '0 4px 12px rgba(191, 167, 106, 0.18)';
       }}
       onMouseLeave={(e) => {
@@ -45,10 +49,7 @@ function ActionTile({ Icon, label, onClick, disabled }: ActionTileProps) {
         e.currentTarget.style.boxShadow = '0 1px 2px rgba(15, 23, 42, 0.04)';
       }}
     >
-      <Icon className="w-5 h-5" strokeWidth={1.75} />
-      <span className="text-[11px] font-semibold tracking-wide uppercase" style={{ letterSpacing: '0.04em' }}>
-        {label}
-      </span>
+      <Icon className="w-[18px] h-[18px]" strokeWidth={1.75} />
     </button>
   );
 }
@@ -210,7 +211,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
           </p>
         )}
         {/* Action tiles */}
-        <div className="mt-4 pt-4 grid grid-cols-4 gap-2" style={{ borderTop: '1px solid var(--gray-200)' }}>
+        <div className="mt-4 pt-4 flex items-center justify-end gap-2" style={{ borderTop: '1px solid var(--gray-200)' }}>
           <ActionTile
             Icon={Sparkles}
             label="Insights"
