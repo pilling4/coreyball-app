@@ -211,7 +211,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
           </p>
         )}
         {/* Action tiles */}
-        <div className="mt-4 pt-4 flex items-center justify-end gap-2" style={{ borderTop: '1px solid var(--gray-200)' }}>
+        <div className="mt-4 pt-4 flex items-center justify-center md:justify-end gap-2" style={{ borderTop: '1px solid var(--gray-200)' }}>
           <ActionTile
             Icon={Sparkles}
             label="Insights"
