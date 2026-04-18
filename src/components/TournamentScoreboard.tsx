@@ -110,7 +110,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
             setExpandedRows(new Set());
             onTournamentChange?.(e.target.value);
           }}
-          className="w-full md:w-auto md:min-w-[320px] px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer outline-none transition-all"
+          className="w-full md:w-auto md:min-w-[480px] px-4 py-2.5 rounded-lg text-xs font-medium cursor-pointer outline-none transition-all whitespace-nowrap"
           style={{
             background: 'linear-gradient(135deg, #BFA76A, #D4C089, #A8935A)',
             color: 'var(--navy-900)',
