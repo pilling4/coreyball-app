@@ -287,7 +287,7 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
                 </th>
                 <th>Player</th>
                 <th>Points</th>
-                {isInProgress && <th>Holes Rem.</th>}
+                {isInProgress && <th>Holes</th>}
                 {isCompleted && <th>Payout</th>}
                 {isExpandable && <th className="w-10"></th>}
               </tr>
