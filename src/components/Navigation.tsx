@@ -12,41 +12,34 @@ interface NavigationProps {
 interface TabDef {
   id: Tab;
   label: string;
-  shortLabel: string;
   Icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
 }
 
 const TABS: TabDef[] = [
-  { id: 'tournaments', label: 'Tournaments', shortLabel: 'Events', Icon: Trophy },
-  { id: 'standings', label: 'Season Standings', shortLabel: 'Standings', Icon: BarChart3 },
-  { id: 'earnings', label: 'Season Earnings', shortLabel: 'Earnings', Icon: DollarSign },
-  { id: 'golfers', label: 'Golfer Stats', shortLabel: 'Golfers', Icon: Users },
+  { id: 'tournaments', label: 'Tournaments', Icon: Trophy },
+  { id: 'standings', label: 'Season Standings', Icon: BarChart3 },
+  { id: 'earnings', label: 'Season Earnings', Icon: DollarSign },
+  { id: 'golfers', label: 'Golfer Stats', Icon: Users },
 ];
 
 export default function Navigation({ activeTab, onTabChange }: NavigationProps) {
   return (
     <>
-      {/* Top Header — always visible */}
+      {/* Top Header */}
       <header
         className="sticky top-0 z-50"
         style={{ background: 'var(--navy-800)', borderBottom: '2px solid var(--gold-500)' }}
       >
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-14">
-            {/* Logo / Title */}
-            <div className="flex items-center gap-3">
+          <div className="relative flex items-center h-14">
+            {/* Centered logo (mobile + desktop) */}
+            <div className="absolute left-1/2 -translate-x-1/2 flex items-center md:static md:left-auto md:translate-x-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo.png" alt="CB" className="w-9 h-9 object-contain" />
-              <span
-                className="text-lg font-bold tracking-wide"
-                style={{ fontFamily: 'Georgia, serif', color: 'var(--gold-300)' }}
-              >
-                COREYBALL
-              </span>
+              <img src="/logo.png?v=3" alt="Coreyball" className="w-10 h-10 object-contain" />
             </div>
 
             {/* Desktop Tabs — hidden on mobile */}
-            <nav className="hidden md:flex gap-1">
+            <nav className="hidden md:flex gap-1 ml-6">
               {TABS.map(tab => {
                 const isActive = activeTab === tab.id;
                 return (
@@ -72,10 +65,10 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
               })}
             </nav>
 
-            {/* Admin link */}
+            {/* Admin link — pushed to right */}
             <a
               href="/admin"
-              className="text-xs px-3 py-1.5 rounded border transition-all"
+              className="ml-auto text-xs px-3 py-1.5 rounded border transition-all"
               style={{ color: '#64748b', borderColor: '#334155' }}
             >
               Admin
@@ -84,7 +77,7 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
         </div>
       </header>
 
-      {/* Mobile Bottom Tab Bar — hidden on desktop */}
+      {/* Mobile Bottom Tab Bar */}
       <nav
         className="md:hidden fixed bottom-0 left-0 right-0 z-50"
         style={{
@@ -93,7 +86,7 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
           paddingBottom: 'env(safe-area-inset-bottom)',
         }}
       >
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-4" style={{ height: '68px' }}>
           {TABS.map(tab => {
             const isActive = activeTab === tab.id;
             const { Icon } = tab;
@@ -101,20 +94,14 @@ export default function Navigation({ activeTab, onTabChange }: NavigationProps) 
               <button
                 key={tab.id}
                 onClick={() => onTabChange(tab.id)}
-                className="flex flex-col items-center justify-center gap-1 py-2.5 transition-all cursor-pointer"
+                className="flex items-start justify-center transition-all cursor-pointer"
                 style={{
                   color: isActive ? 'var(--gold-300)' : '#94a3b8',
-                  minHeight: '56px',
+                  paddingTop: '14px',
                 }}
                 aria-label={tab.label}
               >
-                <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 2} />
-                <span
-                  className="text-[10px] font-medium leading-none"
-                  style={{ letterSpacing: '0.02em' }}
-                >
-                  {tab.shortLabel}
-                </span>
+                <Icon className="w-7 h-7" strokeWidth={isActive ? 2.5 : 2} />
               </button>
             );
           })}
