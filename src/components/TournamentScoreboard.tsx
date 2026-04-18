@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, Fragment } from 'react';
+import { useState, useMemo, useEffect, useRef, Fragment } from 'react';
 import { Tournament, TournamentData, PlayerSeason } from '@/lib/types';
 import { getRoundLabel, formatUpdatedAt } from '@/lib/utils';
 import { useTournaments } from '@/lib/TournamentContext';
@@ -49,6 +49,18 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
   const [showInsights, setShowInsights] = useState(false);
   const [showRankInfo, setShowRankInfo] = useState(false);
 
+  // Track whether user has manually picked — if not, auto-update default when data loads
+  const userSelectedRef = useRef(false);
+  useEffect(() => {
+    if (userSelectedRef.current) return;
+    const latest = getLatestTournamentWithData(TOURNAMENTS, tournamentData);
+    if (latest !== selectedId) {
+      setSelectedId(latest);
+      onTournamentChange?.(latest);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tournamentData]);
+
   // Build a lookup from entryName -> seasonRank
   const seasonRankMap = useMemo(() => {
     const map = new Map<string, number>();
@@ -89,31 +101,36 @@ export default function TournamentScoreboard({ tournamentData, playerSeasons, on
   return (
     <div>
       {/* Tournament Selector */}
-      <div className="flex flex-wrap gap-2 mb-6">
-        {TOURNAMENTS.map(t => {
-          const hasData = !!tournamentData[t.id];
-          return (
-            <button
-              key={t.id}
-              onClick={() => { setSelectedId(t.id); setExpandedRows(new Set()); onTournamentChange?.(t.id); }}
-              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all cursor-pointer ${
-                selectedId === t.id ? 'scale-105' : 'hover:scale-102'
-              }`}
-              style={selectedId === t.id ? {
-                background: 'linear-gradient(135deg, #BFA76A, #D4C089, #A8935A)',
-                color: 'var(--navy-900)',
-                boxShadow: '0 2px 8px rgba(191, 167, 106, 0.3)',
-              } : {
-                background: hasData ? 'var(--gray-100)' : 'var(--gray-50)',
-                color: hasData ? 'var(--gray-700)' : 'var(--gray-300)',
-                border: '1px solid var(--gray-200)',
-              }}
-            >
-              {t.shortName}
-              {t.isMajor && <span className="ml-1 text-xs opacity-70">*</span>}
-            </button>
-          );
-        })}
+      <div className="mb-6">
+        <select
+          value={selectedId}
+          onChange={(e) => {
+            userSelectedRef.current = true;
+            setSelectedId(e.target.value);
+            setExpandedRows(new Set());
+            onTournamentChange?.(e.target.value);
+          }}
+          className="w-full md:w-auto md:min-w-[320px] px-4 py-2.5 rounded-lg text-sm font-medium cursor-pointer outline-none transition-all"
+          style={{
+            background: 'linear-gradient(135deg, #BFA76A, #D4C089, #A8935A)',
+            color: 'var(--navy-900)',
+            border: '1px solid var(--gold-500)',
+            boxShadow: '0 2px 8px rgba(191, 167, 106, 0.3)',
+          }}
+        >
+          {[...TOURNAMENTS]
+            .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime())
+            .map(t => {
+              const hasData = !!tournamentData[t.id];
+              const start = new Date(t.startDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              const end = new Date(t.endDate + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              return (
+                <option key={t.id} value={t.id}>
+                  {`${t.name}${t.isMajor ? ' \u2605' : ''} \u2014 ${start} \u2013 ${end}${!hasData ? ' (Upcoming)' : ''}`}
+                </option>
+              );
+            })}
+        </select>
       </div>
 
       {/* Status Bar */}
