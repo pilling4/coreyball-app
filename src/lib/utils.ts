@@ -190,18 +190,68 @@ export function buildPlayerSeasons(allTournamentData: TournamentData[]): PlayerS
   return sorted;
 }
 
+/**
+ * Prize dollars awarded at a 1-indexed finishing position. Returns 0 beyond
+ * the paying spots (2nd for majors, 1st for non-majors).
+ */
+function prizeAtPosition(position: number, isMajor: boolean): number {
+  if (isMajor) {
+    if (position === 1) return PAYOUTS.major.first.amount;
+    if (position === 2) return PAYOUTS.major.second.amount;
+    return 0;
+  }
+  if (position === 1) return PAYOUTS.nonMajor.first.amount;
+  return 0;
+}
+
+/**
+ * Assign ranks and payouts, splitting the pot when multiple entries tie on
+ * points. Standard golf-tournament rule: tied entries pool the prizes for
+ * the positions they collectively occupy and split the total evenly, and
+ * all of them receive credit for the highest of those positions.
+ *
+ * Examples (major, prizes: 1st=$384, 2nd=$192):
+ *   - Two tie for 1st: each gets ($384+$192)/2 = $288, both ranked 1.
+ *   - Three tie for 1st: each gets ($384+$192+$0)/3 = $192, all ranked 1.
+ *   - Clear winner, two tied for 2nd: winner gets $384 (rank 1); the tied
+ *     pair each get ($192+$0)/2 = $96 (both rank 2).
+ *
+ * Example (non-major, prize: 1st=$96):
+ *   - Two tie for 1st: each gets $96/2 = $48, both ranked 1.
+ */
 export function calculateEventPayouts(entries: Entry[], isMajor: boolean): Entry[] {
   const sorted = [...entries].sort((a, b) => b.points - a.points);
-  return sorted.map((entry, i) => {
-    let payout = 0;
-    if (isMajor) {
-      if (i === 0) payout = PAYOUTS.major.first.amount;
-      else if (i === 1) payout = PAYOUTS.major.second.amount;
+
+  // Group consecutive entries that share the same points value.
+  const groups: Entry[][] = [];
+  for (const entry of sorted) {
+    const last = groups[groups.length - 1];
+    if (last && last[0].points === entry.points) {
+      last.push(entry);
     } else {
-      if (i === 0) payout = PAYOUTS.nonMajor.first.amount;
+      groups.push([entry]);
     }
-    return { ...entry, payout };
-  });
+  }
+
+  const result: Entry[] = [];
+  let position = 1; // 1-indexed overall position as we walk down the list
+  for (const group of groups) {
+    const size = group.length;
+    // Sum prizes for every position this group collectively occupies.
+    let pooled = 0;
+    for (let i = 0; i < size; i++) {
+      pooled += prizeAtPosition(position + i, isMajor);
+    }
+    // Split evenly, rounded to the nearest cent.
+    const payoutEach = pooled > 0 ? Math.round((pooled / size) * 100) / 100 : 0;
+
+    for (const entry of group) {
+      result.push({ ...entry, rank: position, payout: payoutEach });
+    }
+    position += size;
+  }
+
+  return result;
 }
 
 export function buildSeasonEarnings(playerSeasons: PlayerSeason[]): SeasonEarningsEntry[] {
