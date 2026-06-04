@@ -230,23 +230,45 @@ export async function getLiveTournaments(): Promise<import('./types').Tournament
   try {
     const { data } = await getSupabaseClient()!
       .from('tournaments')
-      .select('*')
-      .order('start_date', { ascending: true });
+      .select('*');
 
-    if (data && data.length > 0) {
-      return data.map((t: Record<string, unknown>) => ({
-        id: t.id as string,
-        name: t.name as string,
-        shortName: t.short_name as string,
-        slug: t.slug as string,
-        startDate: t.start_date as string,
-        endDate: t.end_date as string,
-        isMajor: t.is_major as boolean,
-        multiplier: Number(t.multiplier),
-        status: t.status as 'upcoming' | 'in_progress' | 'completed',
-        currentRound: t.current_round as number,
-        updatedAt: (t.updated_at as string) || '',
-      }));
+    if (data) {
+      // Map Supabase rows by id so we can overlay them onto the schedule.
+      const liveById = new Map<string, import('./types').Tournament>(
+        data.map((t: Record<string, unknown>) => [
+          t.id as string,
+          {
+            id: t.id as string,
+            name: t.name as string,
+            shortName: t.short_name as string,
+            slug: t.slug as string,
+            startDate: t.start_date as string,
+            endDate: t.end_date as string,
+            isMajor: t.is_major as boolean,
+            multiplier: Number(t.multiplier),
+            status: t.status as 'upcoming' | 'in_progress' | 'completed',
+            currentRound: t.current_round as number,
+            updatedAt: (t.updated_at as string) || '',
+          },
+        ])
+      );
+
+      // Start from the canonical schedule in constants (so upcoming events
+      // that have never been uploaded still appear), then override each
+      // entry with its Supabase row when one exists.
+      const merged = TOURNAMENTS.map(t => liveById.get(t.id) ?? t);
+
+      // Include any Supabase rows that aren't in the constants schedule
+      // (defensive — shouldn't happen, but keeps data we wouldn't want to
+      // silently drop).
+      const constantsIds = new Set(TOURNAMENTS.map(t => t.id));
+      for (const [id, live] of liveById) {
+        if (!constantsIds.has(id)) merged.push(live);
+      }
+
+      return merged.sort(
+        (a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime()
+      );
     }
   } catch (err) {
     console.error('Failed to fetch live tournaments:', err);
