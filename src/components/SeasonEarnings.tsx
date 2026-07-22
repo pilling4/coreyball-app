@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { PlayerSeason } from '@/lib/types';
 import { TOTAL_POT, PAYOUTS } from '@/lib/constants';
 import { useTournaments } from '@/lib/TournamentContext';
+import { calculateAdjustedPoints, computeSeasonPrizes } from '@/lib/utils';
 import GolfClap from './GolfClap';
 
 interface SeasonEarningsProps {
@@ -19,16 +20,47 @@ export default function SeasonEarnings({ playerSeasons, onPlayerClick }: SeasonE
   const completedTournamentIds = new Set(
     TOURNAMENTS.filter(t => t.status === 'completed').map(t => t.id)
   );
+  const inProgressTournamentIds = new Set(
+    TOURNAMENTS.filter(t => t.status === 'in_progress').map(t => t.id)
+  );
+  const isSeasonComplete = TOURNAMENTS.length > 0 && TOURNAMENTS.every(t => t.status === 'completed');
+
+  // Season-long prizes are only awarded once every event has finished. Use the
+  // same total-points calculation as SeasonStandings (completed + in-progress
+  // adjusted points) and the shared tie-splitting helper.
+  const seasonPrizes = useMemo(() => {
+    if (!isSeasonComplete) return new Map<string, { amount: number; rank: number }>();
+    const totals = playerSeasons.map(p => {
+      let total = 0;
+      for (const t of p.tournaments) {
+        if (t.lineup.length === 0) continue;
+        if (completedTournamentIds.has(t.tournamentId) || inProgressTournamentIds.has(t.tournamentId)) {
+          total += calculateAdjustedPoints(t.points, t.multiplier);
+        }
+      }
+      return { handle: p.handle, total };
+    }).sort((a, b) => b.total - a.total);
+
+    const ordered = totals.map(t => t.handle);
+    const pts = new Map(totals.map(t => [t.handle, t.total]));
+    return computeSeasonPrizes(ordered, pts);
+    // completedTournamentIds/inProgressTournamentIds recreated each render but
+    // their content is derived from TOURNAMENTS, so keying on TOURNAMENTS is
+    // sufficient to invalidate.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSeasonComplete, playerSeasons, TOURNAMENTS]);
 
   const playersWithEarnings = playerSeasons
     .map(p => {
-      const completedEarnings = p.tournaments
+      const eventEarnings = p.tournaments
         .filter(t => completedTournamentIds.has(t.tournamentId) && t.payout > 0)
         .reduce((sum, t) => sum + t.payout, 0);
       const completedAwards = p.tournaments.filter(
         t => completedTournamentIds.has(t.tournamentId) && t.payout > 0
       );
-      return { ...p, completedEarnings, completedAwards };
+      const seasonPrize = seasonPrizes.get(p.handle);
+      const completedEarnings = eventEarnings + (seasonPrize?.amount ?? 0);
+      return { ...p, completedEarnings, eventEarnings, completedAwards, seasonPrize };
     })
     .filter(p => p.completedEarnings > 0)
     .sort((a, b) => b.completedEarnings - a.completedEarnings);
@@ -89,6 +121,24 @@ export default function SeasonEarnings({ playerSeasons, onPlayerClick }: SeasonE
                   </td>
                   <td>
                     <div className="flex flex-wrap gap-1.5 justify-center">
+                      {player.seasonPrize && (
+                        <span
+                          className="badge badge-payout"
+                          title={`Season ${player.seasonPrize.rank === 1 ? 'Champion' : player.seasonPrize.rank === 2 ? 'Runner-Up' : '3rd Place'} — $${player.seasonPrize.amount.toLocaleString()}`}
+                          style={{
+                            background: 'linear-gradient(135deg, #BFA76A, #D4C089, #A8935A)',
+                            color: 'var(--navy-900)',
+                            border: '1px solid var(--gold-600)',
+                            fontWeight: 700,
+                          }}
+                        >
+                          {player.seasonPrize.rank === 1
+                            ? `\u{1F3C6} League Champ`
+                            : player.seasonPrize.rank === 2
+                              ? `\u{1F948} 2nd`
+                              : `\u{1F949} 3rd`}
+                        </span>
+                      )}
                       {player.completedAwards.map(award => (
                         <button
                           key={award.tournamentId}
