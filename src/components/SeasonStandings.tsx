@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PlayerSeason, TournamentData } from '@/lib/types';
-import { calculateAdjustedPoints } from '@/lib/utils';
+import { calculateAdjustedPoints, computeSeasonPrizes } from '@/lib/utils';
 import { useTournaments } from '@/lib/TournamentContext';
 import PayoutModal from './PayoutModal';
+import ChampionModal from './ChampionModal';
 import LeaderboardScoreboard from './LeaderboardScoreboard';
 
 interface SeasonStandingsProps {
@@ -16,6 +17,10 @@ interface SeasonStandingsProps {
 export default function SeasonStandings({ playerSeasons, tournamentData, onPlayerClick }: SeasonStandingsProps) {
   const TOURNAMENTS = useTournaments();
   const [showPayouts, setShowPayouts] = useState(false);
+  const [showChampion, setShowChampion] = useState(false);
+
+  // Season is complete when every scheduled tournament has status 'completed'.
+  const isSeasonComplete = TOURNAMENTS.length > 0 && TOURNAMENTS.every(t => t.status === 'completed');
 
   const activeTournaments = TOURNAMENTS.filter(t => tournamentData[t.id]);
   const completedTournamentIds = new Set(
@@ -54,6 +59,49 @@ export default function SeasonStandings({ playerSeasons, tournamentData, onPlaye
     const prevSorted = [...standingsData].sort((a, b) => b.prevTotal - a.prevTotal);
     prevSorted.forEach((p, i) => prevRanks.set(p.handle, i + 1));
   }
+
+  // Season-long prize pool payouts to top 3 (with tie splitting), only after
+  // every tournament is completed.
+  const seasonPrizes = useMemo(() => {
+    if (!isSeasonComplete) return new Map<string, { amount: number; rank: number }>();
+    const ordered = standingsData.map(p => p.handle);
+    const points = new Map(standingsData.map(p => [p.handle, p.calculatedTotal]));
+    return computeSeasonPrizes(ordered, points);
+  }, [isSeasonComplete, standingsData]);
+
+  // Champion = the entry ranked 1st (or a shared tie-for-1st winner — pick the
+  // first alphabetically for stable display when there's a dead heat).
+  const champion = useMemo(() => {
+    if (!isSeasonComplete || standingsData.length === 0) return null;
+    const topPts = standingsData[0].calculatedTotal;
+    const tiedWinners = standingsData.filter(p => p.calculatedTotal === topPts).map(p => p.handle);
+    return tiedWinners.length > 1
+      ? tiedWinners.slice().sort().join(' & ')
+      : tiedWinners[0];
+  }, [isSeasonComplete, standingsData]);
+
+  // Total winnings for the champion popup = tournament payouts + season prize.
+  const championWinnings = useMemo(() => {
+    if (!champion || !isSeasonComplete) return 0;
+    const names = champion.split(' & ');
+    let total = 0;
+    for (const name of names) {
+      const p = playerSeasons.find(ps => ps.handle === name);
+      const seasonPrize = seasonPrizes.get(name)?.amount ?? 0;
+      total += (p?.totalEarnings ?? 0) + seasonPrize;
+    }
+    // For a shared championship display average per-person prize
+    return names.length > 1 ? Math.round(total / names.length) : total;
+  }, [champion, isSeasonComplete, playerSeasons, seasonPrizes]);
+
+  // Fire the champion popup once per session when the season finishes.
+  useEffect(() => {
+    if (!isSeasonComplete || !champion) return;
+    const seenKey = 'coreyball-champion-seen-2026';
+    if (typeof window !== 'undefined' && sessionStorage.getItem(seenKey)) return;
+    setShowChampion(true);
+    if (typeof window !== 'undefined') sessionStorage.setItem(seenKey, '1');
+  }, [isSeasonComplete, champion]);
 
   return (
     <div>
@@ -143,7 +191,18 @@ export default function SeasonStandings({ playerSeasons, tournamentData, onPlaye
                     </button>
                   </td>
                   <td className="cb-data text-sm font-semibold" style={{ color: 'var(--navy-800)' }}>
-                    {player.calculatedTotal > 0 ? player.calculatedTotal.toFixed(1) : '\u2014'}
+                    <div className="flex flex-col items-center leading-tight">
+                      <span>{player.calculatedTotal > 0 ? player.calculatedTotal.toFixed(1) : '\u2014'}</span>
+                      {(() => {
+                        const prize = seasonPrizes.get(player.handle);
+                        if (!prize) return null;
+                        return (
+                          <span className="text-xs font-bold mt-0.5" style={{ color: '#16a34a' }}>
+                            +${prize.amount.toLocaleString()}
+                          </span>
+                        );
+                      })()}
+                    </div>
                   </td>
                   {activeTournaments.map(t => {
                     const pt = player.tournaments.find(pt => pt.tournamentId === t.id);
@@ -192,6 +251,30 @@ export default function SeasonStandings({ playerSeasons, tournamentData, onPlaye
       <p className="mt-2 text-xs text-gray-400">* Major tournaments scored at 1.25x multiplier</p>
 
       <PayoutModal isOpen={showPayouts} onClose={() => setShowPayouts(false)} />
+
+      {isSeasonComplete && champion && (
+        <>
+          <div className="mt-6 flex justify-center">
+            <button
+              onClick={() => setShowChampion(true)}
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-semibold transition-all hover:scale-105 cursor-pointer"
+              style={{
+                background: 'linear-gradient(135deg, #BFA76A, #D4C089, #A8935A)',
+                color: 'var(--navy-900)',
+                boxShadow: '0 4px 16px rgba(191, 167, 106, 0.3)',
+              }}
+            >
+              {'\u{1F3C6}'} View 2026 Champion
+            </button>
+          </div>
+          <ChampionModal
+            isOpen={showChampion}
+            onClose={() => setShowChampion(false)}
+            champion={champion}
+            totalWinnings={championWinnings}
+          />
+        </>
+      )}
     </div>
   );
 }

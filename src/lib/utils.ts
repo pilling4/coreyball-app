@@ -254,6 +254,53 @@ export function calculateEventPayouts(entries: Entry[], isMajor: boolean): Entry
   return result;
 }
 
+/**
+ * Season-long prize pool payouts to top-3 finishers by total points.
+ * Applies the same tie-splitting rule as event payouts: tied entries pool
+ * the prizes for the positions they collectively occupy and split evenly.
+ *
+ * `orderedHandles` must already be sorted by total points descending.
+ * `pointsByHandle` provides the totals used to detect ties.
+ * Returns a Map<handle, { amount, rank }> for finishers who receive a prize.
+ */
+function seasonPrizeAtPosition(position: number): number {
+  if (position === 1) return PAYOUTS.season.first.amount;
+  if (position === 2) return PAYOUTS.season.second.amount;
+  if (position === 3) return PAYOUTS.season.third.amount;
+  return 0;
+}
+
+export function computeSeasonPrizes(
+  orderedHandles: string[],
+  pointsByHandle: Map<string, number>
+): Map<string, { amount: number; rank: number }> {
+  // Group consecutive handles that share the same total points.
+  const groups: string[][] = [];
+  for (const handle of orderedHandles) {
+    const last = groups[groups.length - 1];
+    if (last && pointsByHandle.get(last[0]) === pointsByHandle.get(handle)) {
+      last.push(handle);
+    } else {
+      groups.push([handle]);
+    }
+  }
+
+  const result = new Map<string, { amount: number; rank: number }>();
+  let position = 1;
+  for (const group of groups) {
+    const size = group.length;
+    let pooled = 0;
+    for (let i = 0; i < size; i++) pooled += seasonPrizeAtPosition(position + i);
+    const each = pooled > 0 ? Math.round((pooled / size) * 100) / 100 : 0;
+    if (each > 0) {
+      for (const handle of group) result.set(handle, { amount: each, rank: position });
+    }
+    position += size;
+    if (position > 3) break; // no prizes past 3rd
+  }
+  return result;
+}
+
 export function buildSeasonEarnings(playerSeasons: PlayerSeason[]): SeasonEarningsEntry[] {
   return playerSeasons.map(p => {
     const awards: Award[] = [];
